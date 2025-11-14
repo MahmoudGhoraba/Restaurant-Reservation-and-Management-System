@@ -1,7 +1,7 @@
 const Order = require("../data/models/Order");
 
 class OrderService {
-  static async createOrder({ customerId, staffId = null, items, promoCode = null, paymentId = null }) {
+  static async createOrder({ customerId, staffId = null, items, paymentId = null }) {
     let totalAmount = 0;
     const processedItems = items.map(item => {
       const subTotal = item.price * item.quantity;
@@ -9,10 +9,6 @@ class OrderService {
       return { ...item, subTotal };
     });
 
-    if (promoCode) {
-      // Example: 10% off
-      totalAmount *= 0.9;
-    }
 
     const order = new Order({
       customer: customerId,
