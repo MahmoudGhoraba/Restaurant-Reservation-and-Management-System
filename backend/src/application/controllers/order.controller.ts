@@ -1,12 +1,13 @@
 import { Request, Response, NextFunction } from "express";
-import OrderService from "../services/orderService";
+import OrderService from "../services/order.service";
 import catchAsync from "../../infrastructure/utils/catchAsync";
 import AppError from "../../infrastructure/utils/appError";
 
 class OrderController {
+  // Create a new order
   createOrder = catchAsync(
     async (req: Request, res: Response, next: NextFunction) => {
-      const { items, paymentId } = req.body;
+      const { items, payment } = req.body;
 
       if (!items || items.length === 0) {
         return next(new AppError("Order must contain at least one item.", 400));
@@ -17,9 +18,9 @@ class OrderController {
       }
 
       const order = await OrderService.createOrder({
-        customerId: req.user.id,
+        customer: req.user.id,
         items,
-        paymentId,
+        payment: payment || null,
       });
 
       res.status(201).json({
@@ -29,8 +30,9 @@ class OrderController {
     }
   );
 
+  // Get all orders
   getAllOrders = catchAsync(
-    async (req: Request, res: Response, next: NextFunction) => {
+    async (_req: Request, res: Response, _next: NextFunction) => {
       const orders = await OrderService.getAllOrders();
 
       res.status(200).json({
@@ -41,6 +43,7 @@ class OrderController {
     }
   );
 
+  // Get a single order by ID
   getOrderById = catchAsync(
     async (req: Request, res: Response, next: NextFunction) => {
       const order = await OrderService.getOrderById(req.params.id);
@@ -54,6 +57,7 @@ class OrderController {
     }
   );
 
+  // Update order status
   updateOrderStatus = catchAsync(
     async (req: Request, res: Response, next: NextFunction) => {
       const { status } = req.body;
@@ -63,10 +67,7 @@ class OrderController {
         return next(new AppError("Invalid status value", 400));
       }
 
-      const order = await OrderService.updateOrderStatus(
-        req.params.id,
-        status
-      );
+      const order = await OrderService.updateOrderStatus(req.params.id, status);
 
       if (!order) return next(new AppError("Order not found", 404));
 
@@ -77,6 +78,7 @@ class OrderController {
     }
   );
 
+  // Delete an order
   deleteOrder = catchAsync(
     async (req: Request, res: Response, next: NextFunction) => {
       const deleted = await OrderService.deleteOrder(req.params.id);
@@ -89,7 +91,23 @@ class OrderController {
       });
     }
   );
+
+  // Optional: link payment to order
+  linkPayment = catchAsync(
+    async (req: Request, res: Response, next: NextFunction) => {
+      const { paymentId } = req.body;
+      if (!paymentId) return next(new AppError("Payment ID is required", 400));
+
+      const order = await OrderService.linkPayment(req.params.id, paymentId);
+
+      if (!order) return next(new AppError("Order not found", 404));
+
+      res.status(200).json({
+        status: "success",
+        data: order,
+      });
+    }
+  );
 }
 
 export default new OrderController();
-
