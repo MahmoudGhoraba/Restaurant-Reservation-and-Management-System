@@ -58,4 +58,14 @@ const PaymentSchema = new Schema<IPayment>(
     }
 );
 
-export const Payment = model<IPayment>("payment", PaymentSchema);
+// 3. Add Validation (Pre-save hook)
+PaymentSchema.pre<IPayment>('save', function (next) {
+    if (!this.order && !this.reservation) {
+        next(new Error('Payment must be linked to either an Order or a Reservation.'));
+    } else {
+        next();
+    }
+});
+
+export const payment = model<IPayment>("payment", PaymentSchema);
+export default payment;
