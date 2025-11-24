@@ -1,4 +1,4 @@
-import bcrypt from 'bcrypt';
+import bcrypt from "bcrypt"
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import User, { IUser } from "../../data/models/user.schema";
@@ -8,8 +8,8 @@ interface RegisterParams {
   email: string;
   password: string;
   role: 'Customer' | 'Admin' | 'Staff';
-  profilePicture?:string;
-  phone?:string;
+  profilePicture?: string;
+  phone?: string;
   [key: string]: any; //added in case something like adminLevel or postion or shiftTime added for the discriminator 
 }
 
@@ -38,7 +38,7 @@ interface ResetPasswordParams {
 }
 
 export const registerUser = async (data: RegisterParams): Promise<RegisterResponse> => {
-  const { name, email, password, role,profilePicture,phone,...otherDetails } = data;
+  const { name, email, password, role, profilePicture, phone, ...otherDetails } = data;
 
   const existingUser = await User.findOne({ email });
   if (existingUser) {
@@ -57,32 +57,32 @@ export const registerUser = async (data: RegisterParams): Promise<RegisterRespon
     ...otherDetails //represents other things to add like adminLevel or postion  or shiftTime
   });
 
-  return {user:newUser};
+  return { user: newUser };
 };
 
 export const loginUser = async (data: LoginParams): Promise<LoginResponse> => {
   const { email, password } = data;
   const user = await User.findOne({ email }).select('+password');
-  
+
   if (!user) {
     throw new Error('EMAIL_NOT_FOUND');
   }
   const isMatch = await bcrypt.compare(password, user.password);
-  
+
   if (!isMatch) {
     throw new Error('INVALID_PASSWORD');
   }
   const secretKey = process.env.JWT_SECRET || 'default_secret_key';
-  
+
   const token = jwt.sign(
-      { 
-        user: { 
-          userId: user._id, 
-          role: user.role 
-        } 
-      },
-      secretKey,
-      { expiresIn: '3h' }
+    {
+      user: {
+        userId: user._id,
+        role: user.role
+      }
+    },
+    secretKey,
+    { expiresIn: '3h' }
   );
 
   return { user, token };
@@ -94,7 +94,7 @@ const sendEmail = async (to: string, subject: string, text: string, html: string
     service: "gmail",
     auth: {
       user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS, 
+      pass: process.env.EMAIL_PASS,
     },
     tls: { rejectUnauthorized: false },
   });
@@ -124,7 +124,7 @@ export const forgotPassword = async (data: ForgotPasswordParams): Promise<{ mess
     temp: otpPass,
     expiry: endDate
   };
-  
+
   await user.save();
 
   try {
@@ -184,7 +184,7 @@ export const resetPassword = async (data: ResetPasswordParams): Promise<{ messag
 
 export const getUserProfile = async (userId: string): Promise<IUser> => {
   const userProfile = await User.findById({ userId });
-  
+
   if (!userProfile) {
     throw new Error('User Profile is not found');
   }

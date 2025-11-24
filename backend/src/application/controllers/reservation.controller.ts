@@ -17,11 +17,11 @@ class ReservationController {
   // CREATE RESERVATION
   createReservation = catchAsync(
     async (req: Request, res: Response, next: NextFunction) => {
-      const { reservationDate, reservationTime, numberOfGuests } = req.body;
+      const { table, reservationDate, reservationTime, numberOfGuests, duration } = req.body;
 
       // Validate required fields
-      if (!reservationDate || !reservationTime || !numberOfGuests) {
-        return next(new AppError("Please provide all required fields", 400));
+      if (!table || !reservationDate || !reservationTime || !numberOfGuests) {
+        return next(new AppError("Please provide table, reservationDate, reservationTime, and numberOfGuests", 400));
       }
 
       if (!req.user?.id) {
@@ -30,9 +30,11 @@ class ReservationController {
 
       const reservation = await ReservationService.createReservation({
         customer: req.user.id,
-        reservationDate,
+        table,
+        reservationDate: new Date(reservationDate),
         reservationTime,
         numberOfGuests,
+        duration: duration || 60 // Default to 60 minutes if not provided
       });
 
       res.status(201).json({
@@ -93,16 +95,23 @@ class ReservationController {
   updateReservation = catchAsync(
     async (req: Request, res: Response, next: NextFunction) => {
       const { id } = req.params;
-      const { reservationDate, reservationTime, numberOfGuests } = req.body;
+      const { table, reservationDate, reservationTime, numberOfGuests, duration } = req.body;
 
       if (!req.user?.id) {
         return next(new AppError("User not authenticated", 401));
       }
 
+      const updates: any = {};
+      if (table) updates.table = table;
+      if (reservationDate) updates.reservationDate = new Date(reservationDate);
+      if (reservationTime) updates.reservationTime = reservationTime;
+      if (numberOfGuests) updates.numberOfGuests = numberOfGuests;
+      if (duration) updates.duration = duration;
+
       const reservation = await ReservationService.updateReservation(
         id,
         req.user.id,
-        { reservationDate, reservationTime, numberOfGuests }
+        updates
       );
 
       if (!reservation) {
