@@ -2,11 +2,11 @@ import dotenv from "dotenv";
 dotenv.config();
 
 import express, { Application, Request, Response } from "express";
-import connectDB from "./src/infrastructure/db";
+import Database from "./src/infrastructure/db";
 
 const app: Application = express();
 
-connectDB();
+Database.getInstance();
 
 app.get("/", (req: Request, res: Response) => {
   res.send("MongoDB connection test!");
