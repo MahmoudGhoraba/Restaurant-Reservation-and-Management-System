@@ -5,7 +5,12 @@ export interface IUser extends Document {
   email: string;
   password: string;
   phone?: number;
-  role: 'Customer' | 'Admin' | 'Staff'; 
+  profilePicture?:string;
+  otp?: {
+    temp: number | null;
+    expiry: Date | null;
+  };
+  role: 'Customer' | 'Admin' | 'Staff';
   createdAt: Date;
   updatedAt: Date;
 }
@@ -28,6 +33,10 @@ const userSchema = new Schema(
       required:true
     },
 
+    profilePicture: {
+     type: String, 
+    },
+
    role: {
         type: String,
         enum: ['Customer', 'Admin','Staff'],
@@ -36,6 +45,10 @@ const userSchema = new Schema(
 
     phone: {
       type: Number,
+    },
+    otp: {
+        temp:{type:Number ,default:null},
+        expiry: { type: Date, default: null }
     }
   },
   {
