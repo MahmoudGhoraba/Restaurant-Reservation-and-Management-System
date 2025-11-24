@@ -7,9 +7,9 @@ class ReservationController {
   // Health check endpoint
   h = catchAsync(
     async (_req: Request, res: Response, _next: NextFunction) => {
-      res.status(200).json({ 
+      res.status(200).json({
         status: "success",
-        message: "Hello from Reservation Controller" 
+        message: "Hello from Reservation Controller"
       });
     }
   );
@@ -131,7 +131,7 @@ class ReservationController {
       // Admin can cancel any reservation
       if (req.user.role === "Admin" || req.user.role === "admin") {
         reservation = await ReservationService.cancelReservationByAdmin(id);
-        
+
         if (!reservation) {
           return next(new AppError("Reservation not found", 404));
         }
