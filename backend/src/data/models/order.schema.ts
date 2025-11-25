@@ -4,6 +4,9 @@ import { OrderItemSchema } from "./orderItem.schema";
 export interface IOrderDocument extends Document {
     customer: Types.ObjectId;
     staff?: Types.ObjectId | null;
+   orderType: "Takeaway" | "DineIn" | "Delivery";
+   reservation?: Types.ObjectId | null;
+  table?: Types.ObjectId | null;
     orderDate: Date;
     status: "Pending" | "Preparing" | "Served" | "Completed";
     totalAmount: number;
@@ -31,6 +34,26 @@ const OrderSchema = new Schema(
       ref: "User",  
       default: null,
     },
+
+    orderType: {
+     type: String,
+     enum: ["Takeaway", "DineIn", "Delivery"],
+     default: "Takeaway",
+   },
+
+   // Optional link to a reservation (if order is for a reservation)
+   reservation: {
+     type: Types.ObjectId,
+     ref: "Reservation",
+     default: null,
+   },
+
+   // Optional direct link to a table (for walk-ins / quick lookup)
+   table: {
+     type: Types.ObjectId,
+     ref: "Table",
+     default: null,
+   },
 
     orderDate: {
       type: Date,
@@ -60,7 +83,7 @@ const OrderSchema = new Schema(
     },
   },
   {
-    timestamps: true, // createdAt & updatedAt
+    timestamps: true,
     collection: "orders",
   }
 );

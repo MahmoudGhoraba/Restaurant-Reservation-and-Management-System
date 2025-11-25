@@ -33,8 +33,17 @@ export const register = async (req: Request, res: Response) => {
   try {
     const { name, email, password, role, profilePicture,phone,...otherDetails } = req.body as RegisterRequest;
 
-    if (!name || !email || !password || !role) {
-      return res.status(400).json({ message: 'Name, email, password, and role are required' });
+    if (!name) {
+      return res.status(400).json({ message: 'Name is required' });
+    }
+     if (!email) {
+      return res.status(400).json({ message: 'email is required' });
+    }
+     if (!password) {
+      return res.status(400).json({ message: 'password is required' });
+    }
+     if (!role) {
+      return res.status(400).json({ message: 'role is required' });
     }
 
     const { user } = await userService.registerUser({
@@ -188,3 +197,47 @@ export const getUserProfile = async (req:Request,res:Response) => {
     return res.status(500).json({ message: error?.message || 'Server error' });
   }
 }
+
+export const getUsers = async (req:Request, res:Response) => {
+  try {
+    const users = await userService.getAllUsers();
+
+    return res.status(200).json({
+      success: true,
+      data: users,
+    });
+
+  } catch (error:any) {
+    console.error("Get Users Error:", error);
+
+    if (error.message === "NO_USERS_FOUND") {
+      return res.status(404).json({ message: "No users found" });
+    }
+
+    return res.status(500).json({ message: "Server error" });
+  }
+};
+
+export const getUserById = async (req: Request, res: Response) => {
+  try {
+    const userId = req.params.id;
+    if (!userId) {
+      return res.status(400).json({ message: "User id is required" });
+    }
+
+    const user = await userService.getUserById(userId);
+
+    return res.status(200).json({
+      success: true,
+      data: user,
+    });
+  } catch (error: any) {
+    console.error("Get User By ID Error:", error);
+
+    if (error.message === "USER_NOT_FOUND") {
+      return res.status(404).json({ message: "User not found" });
+    }
+    
+    return res.status(500).json({ message: "Server error" });
+  }
+};

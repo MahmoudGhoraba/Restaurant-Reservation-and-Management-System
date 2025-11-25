@@ -191,3 +191,23 @@ export const getUserProfile = async (userId: string): Promise<IUser> => {
   return userProfile;
 };
 
+export const getAllUsers = async (): Promise<IUser[]> => {
+  const users = await User.find();
+
+  if (users.length === 0) {
+    throw new Error("NO_USERS_FOUND");
+  }
+
+  return users;
+};
+
+
+export const getUserById = async (userId: string): Promise<IUser> => {
+  const user = await User.findById(userId);
+
+  if (!user) {
+    throw new Error("USER_NOT_FOUND");
+  }
+
+  return user;
+};
