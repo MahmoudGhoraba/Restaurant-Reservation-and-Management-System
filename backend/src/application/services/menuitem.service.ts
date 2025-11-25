@@ -11,6 +11,7 @@ export interface IMenuItemService {
     updateDetails: Partial<IMenuItem & Document>
   ): Promise<(IMenuItem & Document) | null>;
   deleteMenuItem(id: string): Promise<(IMenuItem & Document) | null>;
+  getAllMenuItems(): Promise<(IMenuItem & Document)[]>;
 }
 
 class MenuItemService implements IMenuItemService {
@@ -38,6 +39,11 @@ class MenuItemService implements IMenuItemService {
     return item;
   }
 
-
+  async getAllMenuItems(): Promise<(IMenuItem & Document)[]> {
+    const items = await MenuItem.find();
+    return items;
+  }
 }
+
+
 export default new MenuItemService;

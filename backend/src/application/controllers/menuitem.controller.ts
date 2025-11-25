@@ -22,6 +22,19 @@ class MenuItemController {
             data: item
         });
     })
+
+    getAllMenuItems = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+        const items = await MenuItemService.getAllMenuItems();
+        if (!items || items.length === 0) {
+            return next(new AppError("NO_MENU_ITEMS_FOUND", 404))
+        }
+        res.status(200).json({
+            success: true,
+            message: "Menu items retrieved successfully",
+            data: items
+        });
+    })
+    
     getMenuItem = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
         const id = req.params.id
         if (!id) {

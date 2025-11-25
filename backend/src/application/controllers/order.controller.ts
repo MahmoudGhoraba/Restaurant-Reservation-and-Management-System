@@ -7,9 +7,9 @@ class OrderController {
   // Create a new order
   createOrder = catchAsync(
     async (req: Request, res: Response, next: NextFunction) => {
-      const { items, payment } = req.body;
+      const { items, payment, orderType, reservation, table } = req.body;
 
-      if (!items || items.length === 0) {
+      if (!items || !Array.isArray(items) || items.length === 0) {
         return next(new AppError("Order must contain at least one item.", 400));
       }
 
@@ -17,10 +17,19 @@ class OrderController {
         return next(new AppError("User not authenticated.", 401));
       }
 
+      if (orderType === "DineIn" && !reservation && !table) {
+        return next(
+          new AppError("For dine-in orders provide reservation id or table id", 400)
+        );
+      }
+
       const order = await OrderService.createOrder({
         customer: req.user.id,
         items,
         payment: payment || null,
+        orderType: orderType || "Takeaway",
+        reservation: reservation || null,
+        table: table || null,
       });
 
       res.status(201).json({
@@ -92,7 +101,7 @@ class OrderController {
     }
   );
 
-  // Optional: link payment to order
+  
   linkPayment = catchAsync(
     async (req: Request, res: Response, next: NextFunction) => {
       const { paymentId } = req.body;
