@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 
-const secretKey = process.env.SECRET_KEY;
+const secretKey = process.env.JWT_SECRET || 'default_secret_key';
 
 interface JwtPayload {
   user: {

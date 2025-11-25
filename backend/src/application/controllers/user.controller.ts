@@ -31,7 +31,11 @@ interface ResetPasswordRequest {
 
 export const register = async (req: Request, res: Response) => {
   try {
-    const { name, email, password, role, profilePicture,phone,...otherDetails } = req.body as RegisterRequest;
+    if (!req.body) {
+      return res.status(400).json({ message: 'Request body is required' });
+    }
+
+    const { name, email, password, role, profilePicture, phone, ...otherDetails } = req.body as RegisterRequest;
 
     if (!name) {
       return res.status(400).json({ message: 'Name is required' });

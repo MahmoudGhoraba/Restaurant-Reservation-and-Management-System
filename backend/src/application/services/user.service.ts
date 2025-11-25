@@ -183,7 +183,7 @@ export const resetPassword = async (data: ResetPasswordParams): Promise<{ messag
 
 
 export const getUserProfile = async (userId: string): Promise<IUser> => {
-  const userProfile = await User.findById({ userId });
+  const userProfile = await User.findById(userId);
 
   if (!userProfile) {
     throw new Error('User Profile is not found');
