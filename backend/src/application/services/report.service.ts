@@ -1,5 +1,5 @@
-import Report , {IReport} from "../../data/models/report.schema";
-import {Types} from "mongoose";
+import Report, { IReport } from "../../data/models/report.schema";
+import { Types } from "mongoose";
 
 interface GenerateReportInput {
     generatedBy: Types.ObjectId;
@@ -20,11 +20,11 @@ class ReportService {
         return Report.findById(reportId).populate('generatedBy', 'name email');
     }
     async getAllReports(filters: any = {}) {
-        const query : any = {};
-        if(filters.reportType) {
-            query.reportType= filters.reportType;
+        const query: any = {};
+        if (filters.reportType) {
+            query.reportType = filters.reportType;
         }
-        if(filters.generatedBy) {
+        if (filters.generatedBy) {
             query.generatedBy = filters.generatedBy;
         }
         return Report.find(query).populate('generatedBy', 'name email').sort({ generatedDate: -1 });

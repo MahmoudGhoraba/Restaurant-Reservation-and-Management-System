@@ -20,32 +20,32 @@ const authenticateMiddleware = (
   try {
     const cookie = req.cookies;
     console.log('Inside authentication middleware');
-    
+
     if (!cookie) {
       res.status(401).json({ message: 'No cookies found' });
       return;
     }
-    
+
     const token = cookie.token;
-    
+
     if (!token) {
       res.status(405).json({ message: 'No token provided in cookie' });
       return;
     }
-    
+
     if (!secretKey) {
       console.error('SECRET_KEY is not defined in environment variables');
       res.status(500).json({ message: 'Internal server error' });
       return;
     }
-    
+
     jwt.verify(token, secretKey, (error: any, decoded: any) => {
       if (error) {
         console.error('JWT verification failed:', error.message);
         res.status(403).json({ message: 'Invalid or expired token' });
         return;
       }
-      
+
       const payload = decoded as JwtPayload;
       req.user = payload.user;
       console.log('User authenticated:', req.user);

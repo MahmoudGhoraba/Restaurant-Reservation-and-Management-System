@@ -1,6 +1,6 @@
 import CustomerModel, { ICustomer } from "../../data/models/customer.schema";
 import User from "../../data/models/user.schema";
-import MenuItem from "../../data/models/menuitem.schema";
+import { MenuItem } from "../../data/models/menuitem.schema";
 import Order from "../../data/models/order.schema";
 import Feedback from "../../data/models/feedback.schema";
 import { Types } from "mongoose";

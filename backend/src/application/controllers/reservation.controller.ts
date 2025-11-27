@@ -18,7 +18,6 @@ class ReservationController {
   createReservation = catchAsync(
     async (req: Request, res: Response, next: NextFunction) => {
       const { table, reservationDate, reservationTime, numberOfGuests, duration } = req.body;
-
       // Validate required fields
       if (!table || !reservationDate || !reservationTime || !numberOfGuests) {
         return next(new AppError("Please provide table, reservationDate, reservationTime, and numberOfGuests", 400));

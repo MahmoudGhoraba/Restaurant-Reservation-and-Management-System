@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction} from 'express';
+import { Request, Response, NextFunction } from 'express';
 import ReportService from '../services/report.service';
 import catchAsync from '../../infrastructure/utils/catchAsync';
 import AppError from '../../infrastructure/utils/appError';
@@ -14,7 +14,7 @@ class ReportController {
 
     getReportById = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
         const report = await ReportService.getReportById(req.params.id);
-        if(!report) {
+        if (!report) {
             return next(new AppError('Report not found', 404));
         }
         res.status(200).json({
@@ -22,7 +22,7 @@ class ReportController {
             data: report
         });
     })
-    ;
+        ;
 
     getAllReports = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
         const filters = req.query;
@@ -36,7 +36,7 @@ class ReportController {
 
     deleteReport = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
         const report = await ReportService.deleteReport(req.params.id);
-        if(!report) {
+        if (!report) {
             return next(new AppError('Report not found', 404));
         }
         res.status(204).json({
@@ -44,5 +44,5 @@ class ReportController {
             data: null
         });
     });
-}   
+}
 export default new ReportController();
