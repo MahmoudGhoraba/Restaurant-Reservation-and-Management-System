@@ -21,9 +21,21 @@ app.get("/", (req: Request, res: Response) => {
 
 const PORT: number = parseInt(process.env.PORT || "5000", 10);
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+const startServer = async () => {
+  try {
+    await Database.getInstance();
+    console.log("Database connected successfully");
+    
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+    });
+  } catch (error) {
+    console.error("Failed to start server:", error);
+    process.exit(1);
+  }
+};
+
+startServer();
 
 export default app;
 

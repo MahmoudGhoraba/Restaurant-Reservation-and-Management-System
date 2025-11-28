@@ -2,6 +2,7 @@ import bcrypt from "bcrypt"
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import User, { IUser } from "../../data/models/user.schema";
+import AdminModel from "../../data/models/admin.schema";
 import nodemailer from 'nodemailer';
 interface RegisterParams {
   name: string;
@@ -62,23 +63,35 @@ export const registerUser = async (data: RegisterParams): Promise<RegisterRespon
 
 export const loginUser = async (data: LoginParams): Promise<LoginResponse> => {
   const { email, password } = data;
-  const user = await User.findOne({ email }).select('+password');
+  
+  let user = await User.findOne({ email }).select('+password');
 
   if (!user) {
     throw new Error('EMAIL_NOT_FOUND');
   }
+  
   const isMatch = await bcrypt.compare(password, user.password);
 
   if (!isMatch) {
     throw new Error('INVALID_PASSWORD');
   }
-  const secretKey = process.env.JWT_SECRET || 'default_secret_key';
+
+  // If user is Admin, get the full admin document with adminLevel
+  if (user.role === 'Admin') {
+    const adminUser = await AdminModel.findById(user._id).select('+password');
+    if (adminUser) {
+      user = adminUser;
+    }
+  }
+
+   const secretKey = process.env.JWT_SECRET || 'default_secret_key';
 
   const token = jwt.sign(
     {
       user: {
         userId: user._id,
-        role: user.role
+        role: user.role,
+        ...(user.role === 'Admin' && { adminLevel: (user as any).adminLevel })
       }
     },
     secretKey,
@@ -89,29 +102,50 @@ export const loginUser = async (data: LoginParams): Promise<LoginResponse> => {
 };
 
 
+
 const sendEmail = async (to: string, subject: string, text: string, html: string) => {
+  const user = process.env.EMAIL_USER;
+  const pass = process.env.EMAIL_PASS;
+
+  if (!user || !pass) {
+    throw new Error("EMAIL_CREDENTIALS_MISSING");
+  }
+
   const transporter = nodemailer.createTransport({
     service: "gmail",
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
-    },
+    auth: { user, pass },
     tls: { rejectUnauthorized: false },
   });
 
-  const mailOptions = { from: '"Your App" <no-reply@yourapp.com>', to, subject, text, html };
+  try {
+    // verify SMTP/auth configuration before attempting to send
+    await transporter.verify();
+  } catch (verifyErr) {
+    console.error("SMTP verification failed:", verifyErr);
+    throw new Error("EMAIL_SMTP_VERIFICATION_FAILED");
+  }
 
-  return new Promise((resolve, reject) => {
-    transporter.sendMail(mailOptions, (error, info) => {
-      if (error) reject(error);
-      else resolve(info);
-    });
-  });
+  const mailOptions = {
+    from: `"Your App" <${user}>`,
+    to,
+    subject,
+    text,
+    html,
+  };
+
+  try {
+    const info = await transporter.sendMail(mailOptions);
+    return info;
+  } catch (sendErr) {
+    console.error("sendMail error:", sendErr);
+    throw sendErr;
+  }
 };
 
 export const forgotPassword = async (data: ForgotPasswordParams): Promise<{ message: string }> => {
   const { email } = data;
 
+ 
   const user = await User.findOne({ email });
   if (!user) {
     throw new Error('EMAIL_NOT_FOUND');
@@ -135,6 +169,8 @@ export const forgotPassword = async (data: ForgotPasswordParams): Promise<{ mess
       `<b>The OTP is: ${otpPass}, expires at: ${endDate}</b>`
     );
   } catch (error) {
+    // Log the underlying error for debugging and then rethrow the generic code
+    console.error("Forgot Password - email send failed:", error);
     throw new Error('EMAIL_SEND_FAILED');
   }
 
