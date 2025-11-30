@@ -1,4 +1,4 @@
-import { IMenuItem, MenuItem } from "../../data/models/menuitem.schema";
+import MenuItem, { IMenuItem } from "../../data/models/menuitem.schema";
 import { Document } from "mongoose";
 
 export interface IMenuItemService {

@@ -1,6 +1,8 @@
 import bcrypt from "bcrypt"
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
+// Import all models first to ensure discriminators are registered
+import "../../data/models/index";
 import User, { IUser } from "../../data/models/user.schema";
 import AdminModel from "../../data/models/admin.schema";
 import nodemailer from 'nodemailer';

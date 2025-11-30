@@ -1,4 +1,6 @@
 import mongoose, { Mongoose } from "mongoose";
+// Import all models to ensure discriminators are registered before database connection
+import "../data/models/index";
 
 class Database {
   private static instance: Mongoose | null = null;

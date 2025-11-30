@@ -1,4 +1,4 @@
-import {Schema , model,Document,Types} from "mongoose";
+import mongoose, { Document, Schema , Types} from "mongoose";
 
 export interface IPayment extends Document {
     order: Types.ObjectId;
@@ -66,5 +66,4 @@ const PaymentSchema = new Schema<IPayment>(
 //     }
 // });
 
-export const payment = model<IPayment>("payment", PaymentSchema);
-export default payment;
+export default mongoose.model<IPayment>("Payment", PaymentSchema);
