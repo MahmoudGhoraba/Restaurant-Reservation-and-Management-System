@@ -144,13 +144,15 @@ const sendEmail = async (to: string, subject: string, text: string, html: string
   }
 };
 
-// forgotPassword
-export const forgotPassword = async (email: string) => {
+// Forgot password
+export const forgotPassword = async (
+  { email }: ForgotPasswordParams
+): Promise<{ message: string }> => {
   const user = await User.findOne({ email });
   if (!user) throw new Error("EMAIL_NOT_FOUND");
 
   const otp = crypto.randomInt(100000, 999999); // 6-digit OTP
-  const expiry = new Date(Date.now() + 10 * 60 * 1000); // 10 mins
+  const expiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
   user.otp = { temp: otp, expiry };
   await user.save();
@@ -159,43 +161,43 @@ export const forgotPassword = async (email: string) => {
     await sendEmail(
       user.email,
       "Reset Password OTP",
-      `Your OTP is ${otp}. It expires in 10 minutes.`,
-      `<b>Your OTP is ${otp}. It expires in 10 minutes.</b>`
+      `Your OTP is ${otp}. It expires at ${expiry}`,
+      `<b>Your OTP is ${otp}. It expires at ${expiry}</b>`
     );
-  } catch (err) {
-    console.error(err);
+  } catch (error) {
     throw new Error("EMAIL_SEND_FAILED");
   }
 
-  return { message: "OTP sent successfully" };
+  return { message: `OTP sent to ${email}` };
 };
 
-// resetPassword
-export const resetPassword = async (email: string, otp: number, newPassword: string) => {
+// Reset password
+export const resetPassword = async (
+  { email, otp, newPassword }: ResetPasswordParams
+): Promise<{ message: string }> => {
   const user = await User.findOne({ email });
   if (!user) throw new Error("USER_NOT_FOUND");
 
   if (!user.otp?.temp || !user.otp?.expiry) throw new Error("NO_OTP_REQUESTED");
-
   if (user.otp.temp !== otp) throw new Error("INVALID_OTP");
-  if (user.otp.expiry.getTime() < Date.now()) throw new Error("OTP_EXPIRED");
+  if (user.otp.expiry.getTime() <= Date.now()) throw new Error("OTP_EXPIRED");
 
   user.password = await bcrypt.hash(newPassword, 10);
-  user.otp = { temp: null, expiry: null }; // clear OTP
+  user.otp = { temp: null, expiry: null };
   await user.save();
 
   try {
     await sendEmail(
       user.email,
-      "Password Changed",
-      "Your password was changed successfully.",
-      "<b>Your password was changed successfully.</b>"
+      "Password Changed Successfully",
+      "Your password has been changed.",
+      "<b>Your password has been changed successfully.</b>"
     );
-  } catch (err) {
-    console.error("Confirmation email failed:", err);
+  } catch (error) {
+    console.error("Confirmation email failed to send", error);
   }
 
-  return { message: "Password reset successfully" };
+  return { message: "Password changed successfully" };
 };
 
 export const getUserProfile = async (userId: string): Promise<IUser> => {

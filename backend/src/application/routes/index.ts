@@ -14,7 +14,7 @@ const router: Router = express.Router();
 router.use("/orders", orderRoutes);
 router.use("/customers",CustomerRoutes);
 router.use("/feedbacks",feedbackRoutes);
-router.use("/menuItems",feedbackRoutes);
+router.use("/menuItems",menuRoutes);
 router.use("/payments",paymentRoutes);
 router.use("/reports",reportroutes);
 router.use("/reservations",reservationRoutes);

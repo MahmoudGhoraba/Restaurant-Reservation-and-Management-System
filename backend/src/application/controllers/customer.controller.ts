@@ -15,25 +15,6 @@ class CustomerController {
     });
   });
 
-  placeOrder = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    if (!req.user)
-      return next(new AppError("User not authenticated", 401));
-
-    const customerId =
-      typeof req.user.id === "string" ? req.user.id : req.user.id.toHexString();
-
-    const order = await CustomerService.placeOrder(
-      customerId,
-      req.body.items,
-      req.body.paymentId
-    );
-
-    res.status(201).json({
-      status: "success",
-      data: order,
-    });
-  });
-
   trackOrder = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const order = await CustomerService.trackOrder(req.params.orderId);
 
@@ -46,17 +27,13 @@ class CustomerController {
   });
 
   giveFeedback = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    const { referenceId, rating, comment } = req.body;
+    const {id,referenceId, rating, comment } = req.body;
 
-    if (!req.user) {
+    if (!id) {
       return next(new AppError("User not authenticated", 401));
     }
-
-    const customerId =
-      typeof req.user.id === "string" ? req.user.id : req.user.id.toHexString();
-
     const result = await CustomerService.giveFeedback(
-      customerId,
+      id as string,
       referenceId,
       rating,
       comment

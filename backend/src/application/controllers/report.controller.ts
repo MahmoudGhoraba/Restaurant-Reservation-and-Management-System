@@ -25,6 +25,10 @@ class ReportController {
     ;
 
     getAllReports = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+        const { role } = req.body;
+        if (role !== "Admin" && role !== "admin") {
+            return next(new AppError('You are not authorized to access this resource', 403));
+        }
         const filters = req.query;
         const reports = await ReportService.getAllReports(filters);
         res.status(200).json({
@@ -35,6 +39,10 @@ class ReportController {
     });
 
     deleteReport = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+        const { role } = req.body;
+        if (role !== "Admin" && role !== "admin") {
+            return next(new AppError('You are not authorized to access this resource', 403));
+        }
         const report = await ReportService.deleteReport(req.params.id);
         if(!report) {
             return next(new AppError('Report not found', 404));

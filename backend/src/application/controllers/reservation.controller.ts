@@ -17,19 +17,19 @@ class ReservationController {
   // CREATE RESERVATION
   createReservation = catchAsync(
     async (req: Request, res: Response, next: NextFunction) => {
-      const { table, reservationDate, reservationTime, numberOfGuests, duration } = req.body;
+      const {id ,table, reservationDate, reservationTime, numberOfGuests, duration } = req.body;
 
       // Validate required fields
       if (!table || !reservationDate || !reservationTime || !numberOfGuests) {
         return next(new AppError("Please provide table, reservationDate, reservationTime, and numberOfGuests", 400));
       }
 
-      if (!req.user?.id) {
+      if (!id) {
         return next(new AppError("User not authenticated", 401));
       }
 
       const reservation = await ReservationService.createReservation({
-        customer: req.user.id,
+        customer: id as string,
         table,
         reservationDate: new Date(reservationDate),
         reservationTime,
@@ -61,7 +61,8 @@ class ReservationController {
   // GET RESERVATION BY ID
   getReservationById = catchAsync(
     async (req: Request, res: Response, next: NextFunction) => {
-      const reservation = await ReservationService.getReservationById(req.params.id);
+      const { id } = req.body;
+      const reservation = await ReservationService.getReservationById(id as string);
 
       if (!reservation) {
         return next(new AppError("Reservation not found", 404));
@@ -77,11 +78,12 @@ class ReservationController {
   // GET MY RESERVATIONS (Customer's own reservations)
   getMyReservations = catchAsync(
     async (req: Request, res: Response, next: NextFunction) => {
-      if (!req.user?.id) {
+      const { id } = req.body;
+      if (!id) {
         return next(new AppError("User not authenticated", 401));
       }
 
-      const reservations = await ReservationService.getReservationsByCustomer(req.user.id);
+      const reservations = await ReservationService.getReservationsByCustomer(id as string);
 
       res.status(200).json({
         status: "success",
@@ -94,10 +96,10 @@ class ReservationController {
   // UPDATE RESERVATION
   updateReservation = catchAsync(
     async (req: Request, res: Response, next: NextFunction) => {
-      const { id } = req.params;
+      const { id ,customerId } = req.body;
       const { table, reservationDate, reservationTime, numberOfGuests, duration } = req.body;
 
-      if (!req.user?.id) {
+      if (!id) {
         return next(new AppError("User not authenticated", 401));
       }
 
@@ -110,7 +112,7 @@ class ReservationController {
 
       const reservation = await ReservationService.updateReservation(
         id,
-        req.user.id,
+        customerId as string,
         updates
       );
 
@@ -129,17 +131,17 @@ class ReservationController {
   // CANCEL RESERVATION
   cancelReservation = catchAsync(
     async (req: Request, res: Response, next: NextFunction) => {
-      const { id } = req.params;
+      const { id ,customerId } = req.body;
 
-      if (!req.user?.id) {
+      if (!customerId) {
         return next(new AppError("User not authenticated", 401));
       }
 
       let reservation;
 
       // Admin can cancel any reservation
-      if (req.user.role === "Admin" || req.user.role === "admin") {
-        reservation = await ReservationService.cancelReservationByAdmin(id);
+      if (req.user?.role === "Admin" || req.user?.role === "admin") {
+        reservation = await ReservationService.cancelReservationByAdmin(id );
 
         if (!reservation) {
           return next(new AppError("Reservation not found", 404));
@@ -153,7 +155,7 @@ class ReservationController {
       }
 
       // Customer can cancel ONLY their own reservation
-      reservation = await ReservationService.cancelReservationByCustomer(id, req.user.id);
+      reservation = await ReservationService.cancelReservationByCustomer(id, customerId as string);
 
       if (!reservation) {
         return next(new AppError("Reservation not found or unauthorized", 404));
@@ -170,14 +172,14 @@ class ReservationController {
   // CONFIRM RESERVATION (Admin only)
   confirmReservation = catchAsync(
     async (req: Request, res: Response, next: NextFunction) => {
-      const { id } = req.params;
+      const { id , role } = req.body;
 
-      if (req.user?.role !== "Admin" && req.user?.role !== "admin") {
+      if (role!== "Admin" && role!== "admin") {
         return next(new AppError("Only admin can confirm reservations", 403));
       }
 
       try {
-        const reservation = await ReservationService.confirmReservation(id);
+        const reservation = await ReservationService.confirmReservation(id as string);
 
         if (!reservation) {
           return next(new AppError("Reservation not found", 404));
@@ -200,7 +202,8 @@ class ReservationController {
   // DELETE RESERVATION (Admin only)
   deleteReservation = catchAsync(
     async (req: Request, res: Response, next: NextFunction) => {
-      const deleted = await ReservationService.deleteReservation(req.params.id);
+      const { id , AdminId} = req.body;
+      const deleted = await ReservationService.deleteReservation(id as string);
 
       if (!deleted) {
         return next(new AppError("Reservation not found", 404));

@@ -123,19 +123,18 @@ export const login = async (req: Request, res: Response) => {
     }
 
     return res
-      .cookie("token", token, {
-        expires: expiresAt,
-        httpOnly: true,
-        //secure: process.env.NODE_ENV === 'production',   //in deployment
-        secure: true,//in development
-        sameSite: "none",
-      })
-      .status(200)
-      .json({ 
-        message: "Login successful", 
-        user: userResponse, 
-        token 
-      });
+    .cookie("token", token, {
+      expires: expiresAt,
+      httpOnly: true,
+      secure: false,   // <--- false for localhost
+      sameSite: "lax", // <--- 'lax' works on localhost
+    })
+    .status(200)
+    .json({ 
+      message: "Login successful", 
+      user: userResponse, 
+      token 
+    });
 
   } catch (error: any) {
     console.error("Error logging in:", error);

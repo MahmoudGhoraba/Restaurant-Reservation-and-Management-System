@@ -3,58 +3,45 @@ import jwt from "jsonwebtoken";
 
 const secretKey = process.env.JWT_SECRET || 'default_secret_key';
 
+// Extend Express Request to include user
+declare global {
+  namespace Express {
+    interface Request {
+      user?: {
+        id: string;
+        role: string;
+        email?: string;
+      };
+    }
+  }
+}
+
 interface JwtPayload {
   user: {
     id: string;
     role: string;
     email?: string;
   };
-  [key: string]: any;
 }
 
-const authenticateMiddleware = (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): void => {
+const authenticateMiddleware = (req: Request, res: Response, next: NextFunction) => {
   try {
-    const cookie = req.cookies;
-    console.log('Inside authentication middleware');
-    
-    if (!cookie) {
-      res.status(401).json({ message: 'No cookies found' });
-      return;
-    }
-    
-    const token = cookie.token;
-    
+    const token = req.cookies?.token;
+
     if (!token) {
-      res.status(405).json({ message: 'No token provided in cookie' });
-      return;
+      return res.status(401).json({ message: 'No token provided in cookie' });
     }
-    
-    if (!secretKey) {
-      console.error('SECRET_KEY is not defined in environment variables');
-      res.status(500).json({ message: 'Internal server error' });
-      return;
+
+    const decoded = jwt.verify(token, secretKey) as JwtPayload;
+
+    req.user = decoded.user; // assign user to request
+    next();
+  } catch (err: any) {
+    if (err.name === 'TokenExpiredError') {
+      return res.status(403).json({ message: 'Token expired' });
     }
-    
-    jwt.verify(token, secretKey, (error: any, decoded: any) => {
-      if (error) {
-        console.error('JWT verification failed:', error.message);
-        res.status(403).json({ message: 'Invalid or expired token' });
-        return;
-      }
-      
-      const payload = decoded as JwtPayload;
-      req.user = payload.user;
-      console.log('User authenticated:', req.user);
-      next();
-    });
-  } catch (err) {
-    console.error('Unexpected error in auth middleware:', err);
-    res.status(500).json({ message: 'Internal server error' });
-    return;
+    console.error('Auth middleware error:', err);
+    return res.status(403).json({ message: 'Invalid token' });
   }
 };
 
