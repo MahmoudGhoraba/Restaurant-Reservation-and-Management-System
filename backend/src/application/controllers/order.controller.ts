@@ -1,123 +1,60 @@
-import { Request, Response, NextFunction } from "express";
-import OrderService from "../services/order.service";
-import catchAsync from "../../infrastructure/utils/catchAsync";
-import AppError from "../../infrastructure/utils/appError";
+import { Controller, Get, Post, Put, Delete, Param, Body, UseGuards, Request, HttpException, HttpStatus } from '@nestjs/common';
+import { OrderService } from '../services/order.service';
+import { JwtAuthGuard } from '../../middlewares/authMiddleware';
+import { AdminGuard } from '../../middlewares/allowAdminMiddleware';
+import { CreateOrderDto, UpdateOrderDto } from '../../data/dtos';
+import { OrderStatus } from 'src/data/models';
 
-class OrderController {
-  // Create a new order
-  createOrder = catchAsync(
-    async (req: Request, res: Response, next: NextFunction) => {
-      const {id, items, payment, orderType, reservation, table } = req.body;
+@Controller('orders')
+@UseGuards(JwtAuthGuard)
+export class OrderController {
+  constructor(private readonly orderService: OrderService) {}
 
-      if (!items || !Array.isArray(items) || items.length === 0) {
-        return next(new AppError("Order must contain at least one item.", 400));
-      }
+  @Post()
+  async createOrder(@Body() dto: CreateOrderDto, @Request() req) {
+    dto.customer = req.user.id;
+    dto.createdBy = req.user.id;
+    return this.orderService.createOrder(dto);
+  }
 
-      const customerId = id;
-      if (!customerId) {
-        return next(new AppError("User not authenticated.", 401));
-      }
+  @Get()
+  async getAllOrders() {
+    return this.orderService.getAllOrders();
+  }
 
-      if (orderType === "DineIn" && !reservation && !table) {
-        return next(
-          new AppError("For dine-in orders provide reservation id or table id", 400)
-        );
-      }
+  @Get('my-orders')
+  async getOrdersByCustomer(@Request() req) {
+    return this.orderService.getOrdersByCustomer(req.user.id);
+  }
 
-      const order = await OrderService.createOrder({
-        customer: customerId,
-        items,
-        payment: payment || null,
-        orderType: orderType || "Takeaway",
-        reservation: reservation || null,
-        table: table || null,
-      });
+  @Get('status/:status')
+  @UseGuards(AdminGuard)
+  async getOrdersByStatus(@Param('status') status: string) {
+    return this.orderService.getOrdersByStatus(status);
+  }
 
-      res.status(201).json({
-        status: "success",
-        data: order,
-      });
+  @Get(':id')
+  async getOrderById(@Param('id') id: string) {
+    return this.orderService.getOrderById(id);
+  }
+
+  @Put(':id')
+  async updateOrder(@Param('id') id: string, @Body() dto: UpdateOrderDto) {
+    return this.orderService.updateOrder(id, dto);
+  }
+
+  @Put(':id/status')
+  async updateOrderStatus(@Param('id') id: string, @Body('status') status: OrderStatus) {
+    const allowedStatuses = ['Pending', 'Preparing', 'Ready', 'Completed', 'Cancelled'];
+    if (!allowedStatuses.includes(status)) {
+      throw new HttpException('Invalid status value', HttpStatus.BAD_REQUEST);
     }
-  );
+    return this.orderService.updateOrder(id, { status });
+  }
 
-  // Get all orders
-  getAllOrders = catchAsync(
-    async (_req: Request, res: Response, _next: NextFunction) => {
-      const orders = await OrderService.getAllOrders();
-
-      res.status(200).json({
-        status: "success",
-        results: orders.length,
-        data: orders,
-      });
-    }
-  );
-
-  // Get a single order by ID
-  getOrderById = catchAsync(
-    async (req: Request, res: Response, next: NextFunction) => {
-      const order = await OrderService.getOrderById(req.params.id);
-
-      if (!order) return next(new AppError("Order not found", 404));
-
-      res.status(200).json({
-        status: "success",
-        data: order,
-      });
-    }
-  );
-
-  // Update order status
-  updateOrderStatus = catchAsync(
-    async (req: Request, res: Response, next: NextFunction) => {
-      const { status } = req.body;
-      const allowed = ["Pending", "Preparing", "Served", "Completed"] as const;
-
-      if (!allowed.includes(status)) {
-        return next(new AppError("Invalid status value", 400));
-      }
-
-      const order = await OrderService.updateOrderStatus(req.params.id, status);
-
-      if (!order) return next(new AppError("Order not found", 404));
-
-      res.status(200).json({
-        status: "success",
-        data: order,
-      });
-    }
-  );
-
-  // Delete an order
-  deleteOrder = catchAsync(
-    async (req: Request, res: Response, next: NextFunction) => {
-      const deleted = await OrderService.deleteOrder(req.params.id);
-
-      if (!deleted) return next(new AppError("Order not found", 404));
-
-      res.status(204).json({
-        status: "success",
-        data: null,
-      });
-    }
-  );
-
-  
-  linkPayment = catchAsync(
-    async (req: Request, res: Response, next: NextFunction) => {
-      const { paymentId } = req.body;
-      if (!paymentId) return next(new AppError("Payment ID is required", 400));
-
-      const order = await OrderService.linkPayment(req.params.id, paymentId);
-
-      if (!order) return next(new AppError("Order not found", 404));
-
-      res.status(200).json({
-        status: "success",
-        data: order,
-      });
-    }
-  );
+  @Delete(':id')
+  @UseGuards(AdminGuard)
+  async deleteOrder(@Param('id') id: string) {
+    await this.orderService.deleteOrder(id);
+  }
 }
-
-export default new OrderController();

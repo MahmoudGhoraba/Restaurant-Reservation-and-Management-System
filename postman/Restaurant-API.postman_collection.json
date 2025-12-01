@@ -1,0 +1,2417 @@
+{
+	"info": {
+		"_postman_id": "restaurant-api-collection",
+		"name": "Restaurant Reservation & Management API",
+		"description": "Complete API collection for Restaurant Reservation and Management System",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Register User",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Response has user data\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('user');",
+									"    pm.expect(jsonData).to.have.property('message');",
+									"    pm.expect(jsonData.message).to.eql('User registered successfully');",
+									"});",
+									"",
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set(\"user_id\", jsonData.user._id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"John Doe\",\n    \"email\": \"john.doe@example.com\",\n    \"password\": \"password123\",\n    \"role\": \"Customer\",\n    \"phone\": \"+1234567890\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/users/register",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "users", "register"]
+						},
+						"description": "Register a new user (Customer, Admin, or Staff)"
+					},
+					"response": []
+				},
+				{
+					"name": "Register Admin",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Response has admin data\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('user');",
+									"    pm.expect(jsonData.user.role).to.eql('Admin');",
+									"});",
+									"",
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set(\"admin_user_id\", jsonData.user._id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Admin User\",\n    \"email\": \"admin@restaurant.com\",\n    \"password\": \"admin123\",\n    \"role\": \"Admin\",\n    \"adminLevel\": \"Main Admin\",\n    \"phone\": \"+1234567890\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/users/register",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "users", "register"]
+						},
+						"description": "Register a new admin user (requires adminLevel: 'Main Admin' or 'Manager Admin')"
+					},
+					"response": []
+				},
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has token and user\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('token');",
+									"    pm.expect(jsonData).to.have.property('user');",
+									"    pm.expect(jsonData.message).to.eql('Login successful');",
+									"});",
+									"",
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set(\"auth_token\", jsonData.token);",
+									"    pm.environment.set(\"current_user_id\", jsonData.user._id);",
+									"    pm.environment.set(\"current_user_role\", jsonData.user.role);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"{{user_email}}\",\n    \"password\": \"{{user_password}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/users/login",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "users", "login"]
+						},
+						"description": "Login user and receive JWT token"
+					},
+					"response": []
+				},
+				{
+					"name": "Forgot Password",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response indicates OTP sent\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('message');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"{{user_email}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/users/forgot-password",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "users", "forgot-password"]
+						},
+						"description": "Request password reset OTP"
+					},
+					"response": []
+				},
+				{
+					"name": "Reset Password",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Password reset successful\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('message');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"{{user_email}}\",\n    \"otp\": \"{{otp_code}}\",\n    \"password\": \"newpassword123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/users/reset-password",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "users", "reset-password"]
+						},
+						"description": "Reset password using OTP"
+					},
+					"response": []
+				}
+			],
+			"description": "Authentication endpoints"
+		},
+		{
+			"name": "Users",
+			"item": [
+				{
+					"name": "Get User Profile",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has user profile\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('user');",
+									"    pm.expect(jsonData.user).to.have.property('_id');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/users/profile",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "users", "profile"]
+						},
+						"description": "Get current authenticated user's profile"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Users (Admin)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has users array\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('success', true);",
+									"    pm.expect(jsonData).to.have.property('data');",
+									"    pm.expect(jsonData.data).to.be.an('array');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/users",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "users"]
+						},
+						"description": "Get all users (Admin only)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get User By ID (Admin)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has user data\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('success', true);",
+									"    pm.expect(jsonData).to.have.property('data');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/users/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "users", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{user_id}}"
+								}
+							]
+						},
+						"description": "Get user by ID (Admin only)"
+					},
+					"response": []
+				}
+			],
+			"description": "User management endpoints"
+		},
+		{
+			"name": "Customers",
+			"item": [
+				{
+					"name": "Browse Menu",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has menu items\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('status', 'success');",
+									"    pm.expect(jsonData).to.have.property('data');",
+									"    pm.expect(jsonData.data).to.be.an('array');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/customers/menu",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "customers", "menu"]
+						},
+						"description": "Browse menu items"
+					},
+					"response": []
+				},
+				{
+					"name": "Place Order",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Order created successfully\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('status', 'success');",
+									"    pm.expect(jsonData).to.have.property('data');",
+									"});",
+									"",
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set(\"order_id\", jsonData.data._id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"items\": [\n        {\n            \"menuItem\": \"{{menu_item_id}}\",\n            \"quantity\": 2,\n            \"specialInstructions\": \"No onions\"\n        }\n    ],\n    \"paymentId\": \"{{payment_id}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/customers/order",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "customers", "order"]
+						},
+						"description": "Place a new order"
+					},
+					"response": []
+				},
+				{
+					"name": "Track Order",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has order data\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('status', 'success');",
+									"    pm.expect(jsonData).to.have.property('data');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/customers/order/:orderId",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "customers", "order", ":orderId"],
+							"variable": [
+								{
+									"key": "orderId",
+									"value": "{{order_id}}"
+								}
+							]
+						},
+						"description": "Track order status"
+					},
+					"response": []
+				},
+				{
+					"name": "Give Feedback",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Feedback created successfully\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('status', 'success');",
+									"    pm.expect(jsonData).to.have.property('data');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"referenceId\": \"{{order_id}}\",\n    \"rating\": 5,\n    \"comment\": \"Great service and delicious food!\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/customers/feedback",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "customers", "feedback"]
+						},
+						"description": "Submit feedback for an order or reservation"
+					},
+					"response": []
+				}
+			],
+			"description": "Customer-specific endpoints"
+		},
+		{
+			"name": "Reservations",
+			"item": [
+				{
+					"name": "Health Check",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Service is running\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('status', 'success');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/reservations",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "reservations"]
+						},
+						"description": "Health check endpoint"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Reservations",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has reservations array\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('status', 'success');",
+									"    pm.expect(jsonData).to.have.property('data');",
+									"    pm.expect(jsonData.data).to.be.an('array');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/reservations/all",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "reservations", "all"]
+						},
+						"description": "Get all reservations"
+					},
+					"response": []
+				},
+				{
+					"name": "Get My Reservations",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has user's reservations\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('status', 'success');",
+									"    pm.expect(jsonData).to.have.property('data');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/reservations/my-reservations",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "reservations", "my-reservations"]
+						},
+						"description": "Get current user's reservations"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Reservation",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Reservation created successfully\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('status', 'success');",
+									"    pm.expect(jsonData).to.have.property('data');",
+									"});",
+									"",
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set(\"reservation_id\", jsonData.data._id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"table\": \"{{table_id}}\",\n    \"reservationDate\": \"2024-12-25\",\n    \"reservationTime\": \"19:00\",\n    \"numberOfGuests\": 4,\n    \"duration\": 120\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/reservations",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "reservations"]
+						},
+						"description": "Create a new reservation"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Reservation By ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has reservation data\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('status', 'success');",
+									"    pm.expect(jsonData).to.have.property('data');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/reservations/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "reservations", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{reservation_id}}"
+								}
+							]
+						},
+						"description": "Get reservation by ID"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Reservation",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Reservation updated successfully\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('status', 'success');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"numberOfGuests\": 5,\n    \"reservationTime\": \"20:00\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/reservations/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "reservations", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{reservation_id}}"
+								}
+							]
+						},
+						"description": "Update a reservation"
+					},
+					"response": []
+				},
+				{
+					"name": "Cancel Reservation",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Reservation cancelled successfully\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('status', 'success');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/reservations/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "reservations", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{reservation_id}}"
+								}
+							]
+						},
+						"description": "Cancel a reservation"
+					},
+					"response": []
+				},
+				{
+					"name": "Confirm Reservation (Admin)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Reservation confirmed\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('status', 'success');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/reservations/:id/confirm",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "reservations", ":id", "confirm"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{reservation_id}}"
+								}
+							]
+						},
+						"description": "Confirm a reservation (Admin only)"
+					},
+					"response": []
+				}
+			],
+			"description": "Reservation management endpoints"
+		},
+		{
+			"name": "Orders",
+			"item": [
+				{
+					"name": "Create Order",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Order created successfully\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('status', 'success');",
+									"    pm.expect(jsonData).to.have.property('data');",
+									"});",
+									"",
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set(\"order_id\", jsonData.data._id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"items\": [\n        {\n            \"menuItem\": \"{{menu_item_id}}\",\n            \"quantity\": 2,\n            \"specialInstructions\": \"Extra sauce\"\n        }\n    ],\n    \"orderType\": \"Takeaway\",\n    \"payment\": {\n        \"amount\": 50.00,\n        \"paymentMethod\": \"Cash\"\n    }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/orders",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "orders"]
+						},
+						"description": "Create a new order (Customer role required)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Orders",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has orders array\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('status', 'success');",
+									"    pm.expect(jsonData).to.have.property('data');",
+									"    pm.expect(jsonData.data).to.be.an('array');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/orders",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "orders"]
+						},
+						"description": "Get all orders (Admin/Staff only)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Order By ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has order data\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('status', 'success');",
+									"    pm.expect(jsonData).to.have.property('data');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/orders/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "orders", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{order_id}}"
+								}
+							]
+						},
+						"description": "Get order by ID"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Order Status",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Order status updated\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('status', 'success');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"status\": \"Preparing\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/orders/:id/status",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "orders", ":id", "status"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{order_id}}"
+								}
+							]
+						},
+						"description": "Update order status (Admin/Staff only). Allowed values: Pending, Preparing, Served, Completed"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Order",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 204\", function () {",
+									"    pm.response.to.have.status(204);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/orders/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "orders", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{order_id}}"
+								}
+							]
+						},
+						"description": "Delete an order (Customer/Admin)"
+					},
+					"response": []
+				}
+			],
+			"description": "Order management endpoints"
+		},
+		{
+			"name": "Payments",
+			"item": [
+				{
+					"name": "Process Payment",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Payment processed successfully\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('status', 'success');",
+									"    pm.expect(jsonData).to.have.property('data');",
+									"});",
+									"",
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set(\"payment_id\", jsonData.data._id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"order\": \"{{order_id}}\",\n    \"amount\": 50.00,\n    \"paymentMethod\": \"Cash\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/payments",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "payments"]
+						},
+						"description": "Process a payment (must have order or reservation)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Payments",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has payments array\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('status', 'success');",
+									"    pm.expect(jsonData).to.have.property('data');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/payments",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "payments"]
+						},
+						"description": "Get all payments"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Payment By ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has payment data\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('status', 'success');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/payments/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "payments", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{payment_id}}"
+								}
+							]
+						},
+						"description": "Get payment by ID"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Payments By Order",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has payments for order\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('status', 'success');",
+									"    pm.expect(jsonData).to.have.property('data');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/payments/order/:orderId",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "payments", "order", ":orderId"],
+							"variable": [
+								{
+									"key": "orderId",
+									"value": "{{order_id}}"
+								}
+							]
+						},
+						"description": "Get all payments for a specific order"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Payment Status",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Payment status updated\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('status', 'success');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"status\": \"Paid\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/payments/:id/status",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "payments", ":id", "status"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{payment_id}}"
+								}
+							]
+						},
+						"description": "Update payment status. Allowed values: Paid, Pending, Refunded"
+					},
+					"response": []
+				}
+			],
+			"description": "Payment management endpoints"
+		},
+		{
+			"name": "Menu Items",
+			"item": [
+				{
+					"name": "Create Menu Item",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Menu item created\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('success', true);",
+									"});",
+									"",
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set(\"menu_item_id\", jsonData.data._id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Margherita Pizza\",\n    \"description\": \"Classic pizza with tomato and mozzarella\",\n    \"price\": 12.99,\n    \"category\": \"Main Course\",\n    \"available\": true,\n    \"image\": \"https://example.com/pizza.jpg\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/menu",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "menu"]
+						},
+						"description": "Create a new menu item (Admin with Main Admin level only)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Menu Item By ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has menu item\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('success', true);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/menu/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "menu", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{menu_item_id}}"
+								}
+							]
+						},
+						"description": "Get menu item by ID"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Menu Item",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Menu item updated\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('success', true);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"price\": 14.99,\n    \"available\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/menu/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "menu", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{menu_item_id}}"
+								}
+							]
+						},
+						"description": "Update menu item (Admin with Main Admin level only)"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Menu Item",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Menu item deleted\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('success', true);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/menu/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "menu", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{menu_item_id}}"
+								}
+							]
+						},
+						"description": "Delete menu item (Admin with Main Admin level only)"
+					},
+					"response": []
+				}
+			],
+			"description": "Menu item management endpoints"
+		},
+		{
+			"name": "Tables",
+			"item": [
+				{
+					"name": "Create Table",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Table created\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('success', true);",
+									"});",
+									"",
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set(\"table_id\", jsonData.data._id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"tableNumber\": \"T1\",\n    \"capacity\": 4,\n    \"location\": \"Window\",\n    \"available\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/tables",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "tables"]
+						},
+						"description": "Create a new table"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Tables",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has tables array\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('success', true);",
+									"    pm.expect(jsonData).to.have.property('data');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/tables",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "tables"]
+						},
+						"description": "Get all tables"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Available Tables",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has available tables\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('success', true);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/tables/available/search?date=2024-12-25&time=19:00&duration=120&capacity=4",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "tables", "available", "search"],
+							"query": [
+								{
+									"key": "date",
+									"value": "2024-12-25"
+								},
+								{
+									"key": "time",
+									"value": "19:00"
+								},
+								{
+									"key": "duration",
+									"value": "120"
+								},
+								{
+									"key": "capacity",
+									"value": "4"
+								}
+							]
+						},
+						"description": "Search for available tables by date, time, duration, and capacity"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Table By ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has table data\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('success', true);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/tables/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "tables", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{table_id}}"
+								}
+							]
+						},
+						"description": "Get table by ID"
+					},
+					"response": []
+				},
+				{
+					"name": "Check Table Availability",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has availability data\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('success', true);",
+									"    pm.expect(jsonData).to.have.property('data');",
+									"    pm.expect(jsonData.data).to.have.property('isAvailable');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/tables/:id/availability?date=2024-12-25&time=19:00&duration=120",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "tables", ":id", "availability"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{table_id}}"
+								}
+							],
+							"query": [
+								{
+									"key": "date",
+									"value": "2024-12-25"
+								},
+								{
+									"key": "time",
+									"value": "19:00"
+								},
+								{
+									"key": "duration",
+									"value": "120"
+								}
+							]
+						},
+						"description": "Check if a specific table is available for a date/time slot"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Table",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Table updated\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('success', true);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"capacity\": 6,\n    \"available\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/tables/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "tables", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{table_id}}"
+								}
+							]
+						},
+						"description": "Update table details"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Table",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Table deleted\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('success', true);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/tables/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "tables", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{table_id}}"
+								}
+							]
+						},
+						"description": "Delete a table"
+					},
+					"response": []
+				}
+			],
+			"description": "Table management endpoints"
+		},
+		{
+			"name": "Feedback",
+			"item": [
+				{
+					"name": "Create Feedback",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Feedback created\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('status', 'success');",
+									"});",
+									"",
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set(\"feedback_id\", jsonData.data._id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"referenceId\": \"{{order_id}}\",\n    \"referenceType\": \"Order\",\n    \"rating\": 5,\n    \"comment\": \"Excellent service!\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/feedback",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "feedback"]
+						},
+						"description": "Create feedback (authenticated users)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Feedback By ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has feedback data\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('status', 'success');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/feedback/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "feedback", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{feedback_id}}"
+								}
+							]
+						},
+						"description": "Get feedback by ID"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Feedback",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Feedback updated\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('status', 'success');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"rating\": 4,\n    \"comment\": \"Updated comment\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/feedback/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "feedback", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{feedback_id}}"
+								}
+							]
+						},
+						"description": "Update feedback"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Feedback (Admin)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has feedback array\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('status', 'success');",
+									"    pm.expect(jsonData).to.have.property('data');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/feedback",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "feedback"]
+						},
+						"description": "Get all feedback (Admin only)"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Feedback (Admin)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 204\", function () {",
+									"    pm.response.to.have.status(204);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/feedback/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "feedback", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{feedback_id}}"
+								}
+							]
+						},
+						"description": "Delete feedback (Admin only)"
+					},
+					"response": []
+				}
+			],
+			"description": "Feedback management endpoints"
+		},
+		{
+			"name": "Reports",
+			"item": [
+				{
+					"name": "Generate Report",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Report generated\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('status', 'success');",
+									"});",
+									"",
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set(\"report_id\", jsonData.data._id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"reportType\": \"Sales\",\n    \"startDate\": \"2024-01-01\",\n    \"endDate\": \"2024-12-31\",\n    \"filters\": {}\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/reports",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "reports"]
+						},
+						"description": "Generate a new report"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Report By ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has report data\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('status', 'success');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/reports/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "reports", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{report_id}}"
+								}
+							]
+						},
+						"description": "Get report by ID"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Reports (Admin)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has reports array\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('status', 'success');",
+									"    pm.expect(jsonData).to.have.property('data');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/reports",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "reports"]
+						},
+						"description": "Get all reports (Admin only)"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Report (Admin)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 204\", function () {",
+									"    pm.response.to.have.status(204);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/reports/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "reports", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{report_id}}"
+								}
+							]
+						},
+						"description": "Delete report (Admin only)"
+					},
+					"response": []
+				}
+			],
+			"description": "Report generation and management endpoints"
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:5000",
+			"type": "string"
+		}
+	]
+}
+

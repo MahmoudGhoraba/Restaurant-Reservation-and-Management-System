@@ -1,221 +1,160 @@
-import { Request, Response, NextFunction } from "express";
-import mongoose from "mongoose";
-import TableService from "../services/table.service";
-import AppError from "../../infrastructure/utils/appError";
-import catchAsync from "../../infrastructure/utils/catchAsync";
+import { Controller, Post, Get, Put, Delete, Body, Param, UseGuards, Query, HttpException, HttpStatus } from '@nestjs/common';
+import { TableService } from '../services/table.service';
+import { JwtAuthGuard } from '../../middlewares/authMiddleware';
+import { AdminGuard } from '../../middlewares/allowAdminMiddleware';
+import { CreateTableDto, UpdateTableDto } from '../../data/dtos';
 
-class TableController {
-    private isValidObjectId(id: string): boolean {
-        return mongoose.Types.ObjectId.isValid(id);
+@Controller('tables')
+export class TableController {
+  constructor(private readonly tableService: TableService) {}
+
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  @Post()
+  async createTable(@Body() data: CreateTableDto) {
+    try {
+      const table = await this.tableService.createTable(data);
+      return {
+        success: true,
+        message: 'Table created successfully',
+        data: { table }
+      };
+    } catch (error) {
+      throw new HttpException(
+        { success: false, message: error.message || 'Failed to create table' },
+        HttpStatus.BAD_REQUEST
+      );
     }
+  }
 
-    createTable = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-        const tableDetails = req.body;
-
-        if (!tableDetails || Object.keys(tableDetails).length === 0) {
-            return next(new AppError("Table details are required", 400));
-        }
-
-        const table = await TableService.createTable(tableDetails);
-
-        res.status(201).json({
+  @UseGuards(JwtAuthGuard)
+  @Get()
+  async getAllTables() {
+    try {
+      const tables = await this.tableService.getAllTables();
+      return {
             success: true,
-            message: "Table created successfully",
-            data: table
-        });
-    });
+        data: { tables }
+      };
+    } catch (error) {
+      throw new HttpException(
+        { success: false, message: error.message || 'Failed to get tables' },
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
+    }
+  }
 
-    getTable = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-        const id = req.params.id;
-
-        if (!id) {
-            return next(new AppError("Table ID is required", 400));
+  @UseGuards(JwtAuthGuard)
+  @Get('available')
+  async getAvailableTables(
+    @Query('date') date: string,
+    @Query('time') time: string,
+    @Query('guests') guests?: number
+  ) {
+    try {
+      if (!date || !time) {
+        throw new Error('Date and time are required');
         }
 
-        if (!this.isValidObjectId(id)) {
-            return next(new AppError("Invalid table ID format", 400));
-        }
+      const reservationDate = new Date(date);
+      const tables = await this.tableService.getAvailableTables(
+        reservationDate,
+        time,
+        60, // Default duration
+        guests ? Number(guests) : undefined
+      );
 
-        const table = await TableService.getTable(id);
-
-        if (!table) {
-            return next(new AppError("Table not found", 404));
-        }
-
-        res.status(200).json({
+      return {
             success: true,
-            message: "Table retrieved successfully",
-            data: table
-        });
-    });
+        data: { tables }
+      };
+    } catch (error) {
+      throw new HttpException(
+        { success: false, message: error.message || 'Failed to get available tables' },
+        HttpStatus.BAD_REQUEST
+      );
+    }
+  }
 
-    updateTable = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-        const id = req.params.id;
-        const tableDetails = req.body;
-
-        if (!id) {
-            return next(new AppError("Table ID is required", 400));
+  @UseGuards(JwtAuthGuard)
+  @Get(':id')
+  async getTableById(@Param('id') id: string) {
+    try {
+      const table = await this.tableService.getTable(id);
+      return {
+        success: true,
+        data: { table }
+      };
+    } catch (error) {
+      throw new HttpException(
+        { success: false, message: error.message || 'Table not found' },
+        HttpStatus.NOT_FOUND
+      );
         }
+  }
 
-        if (!this.isValidObjectId(id)) {
-            return next(new AppError("Invalid table ID format", 400));
-        }
-
-        if (!tableDetails || Object.keys(tableDetails).length === 0) {
-            return next(new AppError("Update details are required", 400));
-        }
-
-        const table = await TableService.updateTable(id, tableDetails);
-
-        if (!table) {
-            return next(new AppError("Table not found", 404));
-        }
-
-        res.status(200).json({
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  @Put(':id')
+  async updateTable(@Param('id') id: string, @Body() data: UpdateTableDto) {
+    try {
+      const table = await this.tableService.updateTable(id, data);
+      return {
             success: true,
-            message: "Table updated successfully",
-            data: table
-        });
-    });
-
-    deleteTable = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-        const id = req.params.id;
-
-        if (!id) {
-            return next(new AppError("Table ID is required", 400));
+        message: 'Table updated successfully',
+        data: { table }
+      };
+    } catch (error) {
+      throw new HttpException(
+        { success: false, message: error.message || 'Failed to update table' },
+        HttpStatus.BAD_REQUEST
+      );
         }
+  }
 
-        if (!this.isValidObjectId(id)) {
-            return next(new AppError("Invalid table ID format", 400));
-        }
-
-        const table = await TableService.deleteTable(id);
-
-        if (!table) {
-            return next(new AppError("Table not found", 404));
-        }
-
-        res.status(200).json({
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  @Delete(':id')
+  async deleteTable(@Param('id') id: string) {
+    try {
+      await this.tableService.deleteTable(id);
+      return {
             success: true,
-            message: "Table deleted successfully",
-            data: table
-        });
-    });
+        message: 'Table deleted successfully'
+      };
+    } catch (error) {
+      throw new HttpException(
+        { success: false, message: error.message || 'Failed to delete table' },
+        HttpStatus.BAD_REQUEST
+      );
+    }
+  }
 
-    getAllTables = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-        const tables = await TableService.getAllTables();
-
-        res.status(200).json({
-            success: true,
-            message: "Tables retrieved successfully",
-            data: tables,
-            count: tables.length
-        });
-    });
-    checkTableAvailability = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-        const { id } = req.params;
-        const { date, time, duration = 60 } = req.query;
-
-        if (!id) {
-            return next(new AppError("Table ID is required", 400));
-        }
-
-        if (!this.isValidObjectId(id)) {
-            return next(new AppError("Invalid table ID format", 400));
-        }
-
+  @UseGuards(JwtAuthGuard)
+  @Get(':id/availability')
+  async checkTableAvailability(
+    @Param('id') tableId: string,
+    @Query('date') date: string,
+    @Query('time') time: string
+  ) {
+    try {
         if (!date || !time) {
-            return next(new AppError("Date and time are required", 400));
+        throw new Error('Date and time are required');
         }
 
-        // Validate time format
-        const timeRegex = /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/;
-        if (!timeRegex.test(time as string)) {
-            return next(new AppError("Time must be in HH:MM format", 400));
-        }
-
-        const reservationDate = new Date(date as string);
-        const reservationDuration = parseInt(duration as string);
-
-        if (reservationDuration < 30 || reservationDuration > 480) {
-            return next(new AppError("Duration must be between 30 and 480 minutes", 400));
-        }
-
-        // Check if table exists
-        const table = await TableService.getTable(id);
-        if (!table) {
-            return next(new AppError("Table not found", 404));
-        }
-
-        // Check availability
-        const isAvailable = await TableService.checkTableAvailability(
-            id,
+      const reservationDate = new Date(date);
+      const isAvailable = await this.tableService.checkTableAvailability(
+        tableId,
             reservationDate,
-            time as string,
-            reservationDuration
+        time
         );
 
-        res.status(200).json({
+      return {
             success: true,
-            message: "Table availability checked",
-            data: {
-                tableId: id,
-                table: {
-                    capacity: table.capacity,
-                    location: table.location
-                },
-                requestedSlot: {
-                    date: date,
-                    time: time,
-                    duration: `${reservationDuration} minutes`
-                },
-                isAvailable,
-                status: isAvailable ? "Available" : "Not available"
-            }
-        });
-    });
-
-    // NEW: Get all available tables for specific time slot
-    getAvailableTables = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-        const { date, time, duration = 60, capacity } = req.query;
-
-        if (!date || !time) {
-            return next(new AppError("Date and time are required", 400));
-        }
-
-        const timeRegex = /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/;
-        if (!timeRegex.test(time as string)) {
-            return next(new AppError("Time must be in HH:MM format", 400));
-        }
-
-        const reservationDate = new Date(date as string);
-        const reservationDuration = parseInt(duration as string);
-        const requiredCapacity = capacity ? parseInt(capacity as string) : undefined;
-
-        if (reservationDuration < 30 || reservationDuration > 480) {
-            return next(new AppError("Duration must be between 30 and 480 minutes", 400));
-        }
-
-        const availableTables = await TableService.getAvailableTables(
-            reservationDate,
-            time as string,
-            reservationDuration,
-            requiredCapacity
-        );
-
-        res.status(200).json({
-            success: true,
-            message: "Available tables retrieved successfully",
-            data: availableTables,
-            count: availableTables.length,
-            requestedSlot: {
-                date: date,
-                time: time,
-                duration: `${reservationDuration} minutes`,
-                minimumCapacity: requiredCapacity || "Any"
-            }
-        });
-    });
+        data: { available: isAvailable }
+      };
+    } catch (error) {
+      throw new HttpException(
+        { success: false, message: error.message || 'Failed to check availability' },
+        HttpStatus.BAD_REQUEST
+      );
+    }
 }
-
-export default TableController;
+}

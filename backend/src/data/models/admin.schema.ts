@@ -1,18 +1,22 @@
-import mongoose, { Schema } from "mongoose";
-import User, { IUser } from "./user.schema";
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { HydratedDocument } from 'mongoose';
+import { User, UserSchema } from './user.schema';
 
-export interface IAdmin extends IUser {
-  adminLevel: string;
+export type AdminDocument = HydratedDocument<Admin>;
+
+export enum AdminLevel {
+  MANAGER = 'Manager',
+  SUPER_ADMIN = 'Super Admin'
 }
 
-const adminSchema = new Schema<IAdmin>({
-  adminLevel: {
+@Schema({ timestamps: true })
+export class Admin extends User {
+  @Prop({
     type: String,
-    enum: ['Manager Admin', 'Main Admin'],
-    required: true,
-  },
-});
+    enum: Object.values(AdminLevel),
+    default: AdminLevel.MANAGER
+  })
+  adminLevel: AdminLevel;
+}
 
-const AdminModel = User.discriminator<IAdmin>('Admin', adminSchema);
-
-export default AdminModel;
+export const AdminSchema = SchemaFactory.createForClass(Admin);

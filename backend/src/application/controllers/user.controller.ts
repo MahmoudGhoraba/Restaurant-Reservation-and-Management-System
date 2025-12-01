@@ -1,272 +1,167 @@
-import { Request, Response } from 'express';
-import * as userService from '../services/user.service';
+import { Controller, Post, Get, Put, Delete, Body, Param, UseGuards, Request, HttpException, HttpStatus } from '@nestjs/common';
+import { UserService } from '../services/user.service';
+import { JwtAuthGuard } from '../../middlewares/authMiddleware';
+import { AdminGuard } from '../../middlewares/allowAdminMiddleware';
+import { RolesGuard } from '../../middlewares/authorizeMiddleware';
+import { CreateUserDto, UpdateUserDto, LoginDto } from '../../data/dtos';
 
-interface RegisterRequest {
-  name?: string;
-  email?: string;
-  password?: string;
-  role?: 'Customer' | 'Admin' | 'Staff';
-  profilePicture?: string;
-  phone?:string;
-  adminLevel?: string;
-  position?: string;
-  shiftTime?: string;
-}
+@Controller('users')
+export class UserController {
+  constructor(private readonly userService: UserService) {}
 
-
-interface LoginRequest {
-  email?: string;
-  password?: string;
-}
-
-interface ForgotPasswordRequest {
-  email?: string;
-}
-
-interface ResetPasswordRequest {
-  email?: string;
-  otp?: string | number;
-  password?: string; 
-}
-
-export const register = async (req: Request, res: Response) => {
-  try {
-    if (!req.body) {
-      return res.status(400).json({ message: 'Request body is required' });
+  @Post('register')
+  async register(@Body() data: CreateUserDto): Promise<any> {
+    try {
+      const user = await this.userService.registerUser(data);
+      return {
+        success: true,
+        message: 'User registered successfully',
+        data: { user: { id: user._id, name: user.name, email: user.email, role: user.role } }
+      };
+    } catch (error) {
+      throw new HttpException(
+        { success: false, message: error.message || 'Registration failed' },
+        HttpStatus.BAD_REQUEST
+      );
     }
-
-    const { name, email, password, role, profilePicture, phone, adminLevel, ...otherDetails } = req.body as RegisterRequest;
-
-    if (!name) {
-      return res.status(400).json({ message: 'Name is required' });
-    }
-     if (!email) {
-      return res.status(400).json({ message: 'email is required' });
-    }
-     if (!password) {
-      return res.status(400).json({ message: 'password is required' });
-    }
-     if (!role) {
-      return res.status(400).json({ message: 'role is required' });
-    }
-
-    if (role === 'Admin' && !adminLevel) {
-      return res.status(400).json({ 
-        message: 'Admin level is required for Admin role. Please specify either "Manager Admin" or "Main Admin"' 
-      });
-    }
-
-    if (role === 'Admin' && adminLevel && !['Manager Admin', 'Main Admin'].includes(adminLevel)) {
-      return res.status(400).json({ 
-        message: 'Invalid admin level. Must be either "Manager Admin" or "Main Admin"' 
-      });
-    }
-
-    const { user } = await userService.registerUser({
-      name,
-      email,
-      password,
-      role,
-      profilePicture,
-      phone,
-      adminLevel,
-      ...otherDetails
-    });
-
-    return res.status(201).json({ 
-      message: 'User registered successfully', 
-      user: {
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        ...(role === 'Admin' && { adminLevel })
-      }
-    });
-
-  } catch (error: any) {
-    console.error("Error registering user:", error);
-
-    if (error.message === 'EMAIL_ALREADY_EXISTS') {
-      return res.status(409).json({ message: 'Email already registered please use another email' });
-    }
-
-    return res.status(500).json({ message: error.message || "Server error" });
   }
-};
 
-
-export const login = async (req: Request, res: Response) => {
-  try {
-    
-    const { email, password } = req.body as LoginRequest;
-
-    if (!email || !password) {
-      return res.status(400).json({ message: 'Email and Password are required' });
+  @Post('login')
+  async login(@Body() data: LoginDto) {
+    try {
+      const result = await this.userService.loginUser(data);
+      return {
+        success: true,
+        message: 'Login successful',
+        data: result
+      };
+    } catch (error) {
+      throw new HttpException(
+        { success: false, message: error.message || 'Login failed' },
+        HttpStatus.UNAUTHORIZED
+      );
     }
-
-    const { user, token } = await userService.loginUser({ email, password });
-
-    const expiresAt = new Date(Date.now() + 1800000); 
-
-    // Build user response object
-    const userResponse: any = {
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      role: user.role
-    };
-
-    // Add adminLevel if user is Admin
-    if (user.role === 'Admin' && (user as any).adminLevel) {
-      userResponse.adminLevel = (user as any).adminLevel;
-    }
-
-    return res
-      .cookie("token", token, {
-        expires: expiresAt,
-        httpOnly: true,
-        //secure: process.env.NODE_ENV === 'production',   //in deployment
-        secure: true,//in development
-        sameSite: "none",
-      })
-      .status(200)
-      .json({ 
-        message: "Login successful", 
-        user: userResponse, 
-        token 
-      });
-
-  } catch (error: any) {
-    console.error("Error logging in:", error);
-
-    if (error.message === 'EMAIL_NOT_FOUND') {
-      return res.status(404).json({ message: "Email not found" });
-    }
-    
-    if (error.message === 'INVALID_PASSWORD') {
-      return res.status(401).json({ message: "Incorrect password" });
-    }
-
-    return res.status(500).json({ message: "Server error" });
   }
-};
 
-export const forgotPassword = async (req: Request, res: Response) => {
-  try {
-    const { email } = req.body as ForgotPasswordRequest;
-
-    if (!email) {
-      return res.status(400).json({ message: "Email is required" });
+  @Post('forgot-password')
+  async forgotPassword(@Body('email') email: string) {
+    try {
+      const result = await this.userService.forgotPassword(email);
+      return {
+        success: true,
+        message: result.message
+      };
+    } catch (error) {
+      throw new HttpException(
+        { success: false, message: error.message || 'Failed to send reset email' },
+        HttpStatus.BAD_REQUEST
+      );
     }
-
-    const result = await userService.forgotPassword({ email });
-
-    return res.status(200).json(result);
-
-  } catch (error: any) {
-    console.error("Forgot Password Error:", error);
-
-    if (error.message === 'EMAIL_NOT_FOUND') {
-      return res.status(404).json({ message: "User not found" });
-    }
-    if (error.message === 'EMAIL_SEND_FAILED') {
-      return res.status(500).json({ message: "Failed to send OTP email" });
-    }
-
-    return res.status(500).json({ message: "Server error" });
   }
-};
 
-export const authOTP = async (req: Request, res: Response) => {
-  try {
-    const { email, otp, password } = req.body as ResetPasswordRequest;
-
-    if (!email || !otp || !password) {
-      return res.status(400).json({ message: "Email, OTP, and new Password are required" });
+  @Post('reset-password')
+  async resetPassword(
+    @Body('email') email: string,
+    @Body('otp') otp: string,
+    @Body('newPassword') newPassword: string
+  ) {
+    try {
+      const result = await this.userService.resetPassword(email, otp, newPassword);
+      return {
+        success: true,
+        message: result.message
+      };
+    } catch (error) {
+      throw new HttpException(
+        { success: false, message: error.message || 'Password reset failed' },
+        HttpStatus.BAD_REQUEST
+      );
     }
-
-    const result = await userService.resetPassword({ 
-      email, 
-      otp, 
-      newPassword: password 
-    });
-
-    return res.status(200).json(result);
-
-  } catch (error: any) {
-    console.error("Auth OTP Error:", error);
-
-    if (error.message === 'USER_NOT_FOUND') return res.status(404).json({ message: "User not found" });
-    if (error.message === 'NO_OTP_REQUESTED') return res.status(400).json({ message: "No OTP request found for this user" });
-    if (error.message === 'INVALID_OTP') return res.status(400).json({ message: "Invalid OTP provided" });
-    if (error.message === 'OTP_EXPIRED') return res.status(400).json({ message: "OTP has expired" });
-
-    return res.status(500).json({ message: "Server error" });
   }
-};
 
-export const getUserProfile = async (req:Request,res:Response) => {
-  try {
-    const userId = (req as any).user?.userId;
-    if (!userId) {
-      return res.status(401).json({ message: "Unauthorized: User ID missing" });
+  @UseGuards(JwtAuthGuard)
+  @Get('profile')
+  async getProfile(@Request() req) {
+    try {
+      const user = await this.userService.getUserProfile(req.user.id);
+      return {
+        success: true,
+        data: { user }
+      };
+    } catch (error) {
+      throw new HttpException(
+        { success: false, message: error.message || 'Failed to get profile' },
+        HttpStatus.NOT_FOUND
+      );
     }
+  }
 
-    const userProfile = await userService.getUserProfile(userId);
-    if (!userProfile) {
-      return res.status(404).json({ message: 'No profile is found' });
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  @Get()
+  async getAllUsers() {
+    try {
+      const users = await this.userService.getAllUsers();
+      return {
+        success: true,
+        data: { users }
+      };
+    } catch (error) {
+      throw new HttpException(
+        { success: false, message: error.message || 'Failed to get users' },
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
     }
-    if(userProfile.role=="Admin"){
-      const adminProfile = await userService.getUserProfile(userId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get(':id')
+  async getUserById(@Param('id') id: string) {
+    try {
+      const user = await this.userService.getUserById(id);
+      return {
+        success: true,
+        data: { user }
+      };
+    } catch (error) {
+      throw new HttpException(
+        { success: false, message: error.message || 'User not found' },
+        HttpStatus.NOT_FOUND
+      );
     }
-    return res.status(200).json({ user: userProfile });
-  } catch (error: any) {
-    console.error("Get User Profile Error:", error);
-    return res.status(500).json({ message: error?.message || 'Server error' });
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Put(':id')
+  async updateUser(@Param('id') id: string, @Body() data: UpdateUserDto) {
+    try {
+      const user = await this.userService.updateUser(id, data);
+      return {
+        success: true,
+        message: 'User updated successfully',
+        data: { user }
+      };
+    } catch (error) {
+      throw new HttpException(
+        { success: false, message: error.message || 'Failed to update user' },
+        HttpStatus.BAD_REQUEST
+      );
+    }
+  }
+
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  @Delete(':id')
+  async deleteUser(@Param('id') id: string) {
+    try {
+      await this.userService.deleteUser(id);
+      return {
+        success: true,
+        message: 'User deleted successfully'
+      };
+    } catch (error) {
+      throw new HttpException(
+        { success: false, message: error.message || 'Failed to delete user' },
+        HttpStatus.BAD_REQUEST
+      );
+    }
   }
 }
-
-export const getUsers = async (req:Request, res:Response) => {
-  try {
-    const users = await userService.getAllUsers();
-
-    return res.status(200).json({
-      success: true,
-      data: users,
-    });
-
-  } catch (error:any) {
-    console.error("Get Users Error:", error);
-
-    if (error.message === "NO_USERS_FOUND") {
-      return res.status(404).json({ message: "No users found" });
-    }
-
-    return res.status(500).json({ message: "Server error" });
-  }
-};
-
-export const getUserById = async (req: Request, res: Response) => {
-  try {
-    const userId = req.params.id;
-    if (!userId) {
-      return res.status(400).json({ message: "User id is required" });
-    }
-
-    const user = await userService.getUserById(userId);
-
-    return res.status(200).json({
-      success: true,
-      data: user,
-    });
-  } catch (error: any) {
-    console.error("Get User By ID Error:", error);
-
-    if (error.message === "USER_NOT_FOUND") {
-      return res.status(404).json({ message: "User not found" });
-    }
-    
-    return res.status(500).json({ message: "Server error" });
-  }
-};

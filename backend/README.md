@@ -1,119 +1,98 @@
-# Restaurant Reservation Backend (TypeScript)
+<p align="center">
+  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
+</p>
 
-This is the backend service for the Restaurant Reservation and Management System, built with Node.js, Express, MongoDB, and TypeScript.
+[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
+[circleci-url]: https://circleci.com/gh/nestjs/nest
 
-## 🚀 Tech Stack
+  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
+    <p align="center">
+<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
+<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
+<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
+<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
+<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
+<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
+<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
+  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
+    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
+  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
+</p>
+  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
+  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
 
-- **TypeScript** - Type-safe JavaScript
-- **Node.js** - Runtime environment
-- **Express** - Web framework
-- **MongoDB** - Database
-- **Mongoose** - ODM for MongoDB
+## Description
 
-## 📦 Project Structure
+[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
 
-```
-backend/
-├── src/
-│   ├── application/
-│   │   ├── controllers/     # Request handlers
-│   │   ├── routes/          # Route definitions
-│   │   └── services/        # Business logic
-│   ├── data/
-│   │   └── models/          # Mongoose models
-│   ├── infrastructure/
-│   │   ├── db.ts           # Database connection
-│   │   └── utils/          # Utility functions
-│   └── types/              # TypeScript type definitions
-├── app.ts                  # Application entry point
-├── tsconfig.json          # TypeScript configuration
-└── package.json           # Dependencies and scripts
-```
-
-## 🛠️ Installation
-
-1. Install dependencies:
-```bash
-npm install
-```
-
-2. Create a `.env` file in the backend directory:
-```env
-PORT=5000
-DB_URL=mongodb://localhost:27017/restaurant-db
-```
-
-## 📝 Available Scripts
-
-### Development Mode
-Run the application with hot-reload using `ts-node` and `nodemon`:
-```bash
-npm run dev
-```
-
-### Build
-Compile TypeScript to JavaScript:
-```bash
-npm run build
-```
-
-### Production Mode
-Run the compiled JavaScript:
-```bash
-npm start
-```
-
-### Clean Build
-Remove the `dist` folder:
-```bash
-npm run clean
-```
-
-## 🔧 TypeScript Configuration
-
-The project uses strict TypeScript settings for better type safety:
-- Strict null checks
-- Strict function types
-- No implicit any
-- Source maps enabled
-- Declaration files generated
-
-## 📚 API Endpoints
-
-### Orders
-- `POST /orders` - Create a new order
-- `GET /orders` - Get all orders
-- `GET /orders/:id` - Get order by ID
-- `PATCH /orders/:id/status` - Update order status
-- `DELETE /orders/:id` - Delete an order
-
-## 🎯 Type Definitions
-
-Custom types are defined in the `src/types/` directory:
-- `order.types.ts` - Order-related interfaces
-- `express.d.ts` - Express request extensions
-
-## 🔐 Environment Variables
-
-Required environment variables:
-- `PORT` - Server port (default: 5000)
-- `DB_URL` - MongoDB connection string
-
-## 📖 Development Guidelines
-
-1. **Type Safety**: Always define types and interfaces
-2. **Error Handling**: Use the `catchAsync` wrapper and `AppError` class
-3. **Models**: Define Mongoose schemas with TypeScript interfaces
-4. **Services**: Keep business logic in service classes
-5. **Controllers**: Handle requests and responses
-
-## 🧪 Testing
+## Project setup
 
 ```bash
-npm test
+$ npm install
 ```
 
-## 📄 License
+## Compile and run the project
 
-ISC
+```bash
+# development
+$ npm run start
 
+# watch mode
+$ npm run start:dev
+
+# production mode
+$ npm run start:prod
+```
+
+## Run tests
+
+```bash
+# unit tests
+$ npm run test
+
+# e2e tests
+$ npm run test:e2e
+
+# test coverage
+$ npm run test:cov
+```
+
+## Deployment
+
+When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+
+If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+
+```bash
+$ npm install -g @nestjs/mau
+$ mau deploy
+```
+
+With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+
+## Resources
+
+Check out a few resources that may come in handy when working with NestJS:
+
+- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
+- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
+- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
+- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
+- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
+- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
+- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
+- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+
+## Support
+
+Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+
+## Stay in touch
+
+- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
+- Website - [https://nestjs.com](https://nestjs.com/)
+- Twitter - [@nestframework](https://twitter.com/nestframework)
+
+## License
+
+Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).

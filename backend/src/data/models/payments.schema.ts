@@ -1,69 +1,62 @@
-import mongoose, { Document, Schema , Types} from "mongoose";
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { HydratedDocument, Types } from 'mongoose';
 
-export interface IPayment extends Document {
-    order: Types.ObjectId;
-    reservation?: Types.ObjectId | null ;/* Optional, for deposits------------------->*/
-    amount: number;
-    paymentMethod: "Cash" | "Card" | "Online";
-    status: "Paid" | "Pending" | "Refunded";
-    transactionId?: string; /*External Bank API*/
-    createdAt: Date;
-    updatedAt: Date;
+export type PaymentDocument = HydratedDocument<Payment>;
+
+export enum PaymentMethod {
+  CASH = 'Cash',
+  CARD = 'Card',
+  ONLINE = 'Online'
 }
 
-const PaymentSchema = new Schema<IPayment>(
-    {
-        order: {
-            type: Schema.Types.ObjectId,
-            ref: "Order",
-            required: true,
-        },
-        reservation: {
-            type: Schema.Types.ObjectId,
-            ref: "Reservation",
-            default:null ,
-            required: false,
-        },
-        amount: {
-            type: Number,
-            required: true,
-        },
-        paymentMethod: {
-            type: String,
-            enum: ["Cash" , "Card" , "Online"],
-            default: "Cash",
-            required: true,
-        },
-        status: {
-            type: String,
-            enum: ["Paid" , "Pending" , "Refunded"],
-            default: "Pending",
-            required: true,
-        },
-        transactionId: {
-            type: String,
-            required: false,
-        },
-        updatedAt: {
-            type: Date,
-            default : Date.now,
-        },
-        createdAt:{
-            type:Date,
-        }
-    },
-    {
-        timestamps: true,
-    }
-);
-//
-// // 3. Add Validation (Pre-save hook)
-// PaymentSchema.pre<IPayment>('save', function (next) {
-//     if (!this.order && !this.reservation) {
-//         next(new Error('Payment must be linked to either an Order or a Reservation.'));
-//     } else {
-//         next();
-//     }
-// });
+export enum PaymentStatus {
+  PENDING = 'Pending',
+  PAID = 'Paid',
+  FAILED = 'Failed'
+}
 
-export default mongoose.model<IPayment>("Payment", PaymentSchema);
+@Schema({ timestamps: true })
+export class Payment {
+  _id: Types.ObjectId;
+
+  @Prop({ unique: true, required: true })
+  paymentNumber: string;
+
+  @Prop({ type: Types.ObjectId, ref: 'Order' })
+  order?: Types.ObjectId;
+
+  @Prop({ type: Types.ObjectId, ref: 'Reservation' })
+  reservation?: Types.ObjectId;
+
+  @Prop({ type: Types.ObjectId, ref: 'User', required: true })
+  customer: Types.ObjectId;
+
+  @Prop({ required: true, min: 0 })
+  amount: number;
+
+  @Prop({
+    type: String,
+    enum: Object.values(PaymentMethod),
+    required: true,
+    default: PaymentMethod.CASH
+  })
+  paymentMethod: PaymentMethod;
+
+  @Prop({
+    type: String,
+    enum: Object.values(PaymentStatus),
+    default: PaymentStatus.PENDING
+  })
+  status: PaymentStatus;
+
+  @Prop({ trim: true })
+  transactionId?: string;
+
+  @Prop({ type: Types.ObjectId, ref: 'User' })
+  processedBy?: Types.ObjectId;
+
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export const PaymentSchema = SchemaFactory.createForClass(Payment);

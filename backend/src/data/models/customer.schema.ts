@@ -1,18 +1,16 @@
-import mongoose, { Schema } from "mongoose";
-import User, { IUser } from "./user.schema"; 
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { HydratedDocument } from 'mongoose';
+import { User, UserSchema } from './user.schema';
 
+export type CustomerDocument = HydratedDocument<Customer>;
 
-export interface ICustomer extends IUser {
+@Schema({ timestamps: true })
+export class Customer extends User {
+  @Prop({ default: 0 })
   reservationCount: number;
+
+  @Prop({ default: 0 })
+  totalSpent: number;
 }
 
-const customerSchema = new Schema<ICustomer>({
-  reservationCount: {
-    type: Number,
-    default: 0
-  }
-});
-
-const CustomerModel = User.discriminator<ICustomer>('Customer', customerSchema);
-
-export default CustomerModel;
+export const CustomerSchema = SchemaFactory.createForClass(Customer);

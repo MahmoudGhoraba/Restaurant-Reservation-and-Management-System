@@ -1,91 +1,70 @@
-import mongoose, { Document, Schema, Types } from "mongoose";
-import { OrderItemSchema } from "./orderItem.schema";
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { HydratedDocument, Types } from 'mongoose';
+import { OrderItem, OrderItemSchema } from './orderItem.schema';
 
-export interface IOrderDocument extends Document {
-    customer: Types.ObjectId;
-    staff?: Types.ObjectId | null;
-   orderType: "Takeaway" | "DineIn" | "Delivery";
-   reservation?: Types.ObjectId | null;
-  table?: Types.ObjectId | null;
-    orderDate: Date;
-    status: "Pending" | "Preparing" | "Served" | "Completed";
-    totalAmount: number;
-    payment?: Types.ObjectId | null;
-    items: Array<{
-      menuItem: Types.ObjectId;
-      name: string;
-      quantity: number;
-      price: number;
-      subTotal: number;
-    }>;
-  }
-  
+export type OrderDocument = HydratedDocument<Order>;
 
-const OrderSchema = new Schema(
-  {
-    customer: {
-      type: Types.ObjectId,
-      ref: "User",
-      required: true,
-    },
+export enum OrderType {
+  TAKEAWAY = 'Takeaway',
+  DINE_IN = 'DineIn',
+  DELIVERY = 'Delivery'
+}
 
-    staff: {
-      type: Types.ObjectId,
-      ref: "User",  
-      default: null,
-    },
+export enum OrderStatus {
+  PENDING = 'Pending',
+  PREPARING = 'Preparing',
+  READY = 'Ready',
+  COMPLETED = 'Completed'
+}
 
-    orderType: {
-     type: String,
-     enum: ["Takeaway", "DineIn", "Delivery"],
-     default: "Takeaway",
-   },
+@Schema({ timestamps: true })
+export class Order {
+  _id: Types.ObjectId;
 
-   // Optional link to a reservation (if order is for a reservation)
-   reservation: {
-     type: Types.ObjectId,
-     ref: "Reservation",
-     default: null,
-   },
+  @Prop({ unique: true, required: true })
+  orderNumber: string;
 
-   // Optional direct link to a table (for walk-ins / quick lookup)
-   table: {
-     type: Types.ObjectId,
-     ref: "Table",
-     default: null,
-   },
+  @Prop({ type: Types.ObjectId, ref: 'User', required: true })
+  customer: Types.ObjectId;
 
-    orderDate: {
-      type: Date,
-      default: Date.now,
-    },
+  @Prop({ type: Types.ObjectId, ref: 'User' })
+  staff?: Types.ObjectId;
 
-    status: {
-      type: String,
-      enum: ["Pending", "Preparing", "Served", "Completed"],
-      default: "Pending",
-    },
+  @Prop({
+    type: String,
+    enum: Object.values(OrderType),
+    required: true,
+    default: OrderType.TAKEAWAY
+  })
+  orderType: OrderType;
 
-    totalAmount: {
-      type: Number,
-      required: true,
-    },
+  @Prop({ type: Types.ObjectId, ref: 'Reservation' })
+  reservation?: Types.ObjectId;
 
-    payment: {
-      type: Types.ObjectId,
-      ref: "Payment",
-      default: null,
-    },
+  @Prop({ type: Types.ObjectId, ref: 'Table' })
+  table?: Types.ObjectId;
 
-    items: {
-      type: [OrderItemSchema],
-      required: true,
-    },
-  },
-  {
-    timestamps: true,
-    collection: "orders",
-  }
-);
+  @Prop({
+    type: String,
+    enum: Object.values(OrderStatus),
+    default: OrderStatus.PENDING
+  })
+  status: OrderStatus;
 
-export default mongoose.model("Order", OrderSchema);
+  @Prop({ trim: true })
+  specialInstructions?: string;
+
+  @Prop({ required: true, min: 0 })
+  totalAmount: number;
+
+  @Prop({ type: [OrderItemSchema], required: true })
+  items: OrderItem[];
+
+  @Prop({ type: Types.ObjectId, ref: 'User', required: true })
+  createdBy: Types.ObjectId;
+
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export const OrderSchema = SchemaFactory.createForClass(Order);

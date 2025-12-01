@@ -1,37 +1,76 @@
-import Report , {IReport} from "../../data/models/report.schema";
-import {Types} from "mongoose";
+import { Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import { Report, ReportDocument } from '../../data/models/report.schema';
 
-interface GenerateReportInput {
-    generatedBy: Types.ObjectId;
-    reportType: "Sales" | "Reservation" | "Staff Performance" | "Feedback";
-    content: any;
-}
+@Injectable()
+export class ReportService {
+  constructor(
+    @InjectModel(Report.name) private reportModel: Model<ReportDocument>,
+  ) {}
 
-class ReportService {
-    async generateReport(input: GenerateReportInput): Promise<IReport> {
-        const report = new Report({
-            generatedBy: input.generatedBy,
-            reportType: input.reportType,
-            content: input.content
+  async generateReport(data: {
+    generatedBy: string;
+    reportType: 'Sales' | 'Reservation' | 'Feedback';
+    title: string;
+    description?: string;
+    dateRange: { startDate: Date; endDate: Date };
+    content: { summary: Record<string, any>; data: any[] };
+  }): Promise<ReportDocument> {
+    const report = new this.reportModel({
+      reportNumber: await this.generateReportNumber(),
+      generatedBy: data.generatedBy,
+      reportType: data.reportType,
+      title: data.title,
+      description: data.description,
+      dateRange: data.dateRange,
+      content: data.content,
+      status: 'Completed',
+      generatedAt: new Date(),
         });
-        return await report.save();
+
+    return report.save();
     }
-    async getReportById(reportId: string): Promise<IReport | null> {
-        return Report.findById(reportId).populate('generatedBy', 'name email');
+
+  async getReportById(reportId: string): Promise<ReportDocument> {
+    const report = await this.reportModel.findById(reportId)
+      .populate('generatedBy', 'name email');
+    if (!report) {
+      throw new Error('REPORT_NOT_FOUND');
     }
-    async getAllReports(filters: any = {}) {
-        const query : any = {};
-        if(filters.reportType) {
-            query.reportType= filters.reportType;
+    return report;
+  }
+
+  async getAllReports(filters: { reportType?: string; generatedBy?: string } = {}): Promise<ReportDocument[]> {
+    const query: any = {};
+    if (filters.reportType) {
+      query.reportType = filters.reportType;
         }
-        if(filters.generatedBy) {
+    if (filters.generatedBy) {
             query.generatedBy = filters.generatedBy;
         }
-        return Report.find(query).populate('generatedBy', 'name email').sort({ generatedDate: -1 });
-    }
-    async deleteReport(reportId: string): Promise<IReport | null> {
-        return Report.findByIdAndDelete(reportId);
+
+    return this.reportModel.find(query)
+      .populate('generatedBy', 'name email')
+      .sort({ generatedAt: -1 });
     }
 
+  async deleteReport(reportId: string): Promise<void> {
+    const report = await this.reportModel.findByIdAndDelete(reportId);
+    if (!report) {
+      throw new Error('REPORT_NOT_FOUND');
+    }
+  }
+
+  async getReportsByType(reportType: string): Promise<ReportDocument[]> {
+    return this.reportModel.find({ reportType })
+      .populate('generatedBy', 'name email')
+      .sort({ generatedAt: -1 });
+  }
+
+  private async generateReportNumber(): Promise<string> {
+    const count = await this.reportModel.countDocuments();
+    const timestamp = Date.now();
+    return `RPT-${timestamp}-${String(count + 1).padStart(4, '0')}`;
+  }
 }
-export default new ReportService;

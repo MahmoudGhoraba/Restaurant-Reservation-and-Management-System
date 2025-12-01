@@ -1,22 +1,32 @@
-import mongoose, { Schema } from "mongoose";
-import User, { IUser } from "./user.schema";
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { User } from './user.schema'; // assuming Staff extends User
+import { HydratedDocument } from 'mongoose';
 
-export interface IStaff extends IUser {
-  position: string;
-  shiftTime: string;
+export type StaffDocument = HydratedDocument<Staff>;
+
+export enum StaffPosition {
+  WAITER = 'Waiter',
+  CHEF = 'Chef',
+  MANAGER = 'Manager',
 }
 
-const staffSchema = new Schema<IStaff>({
-  position: {
-    type: String,
-    required: true
-  },
-  shiftTime: {
-    type: String,
-    required: true
-  },
-});
+export enum ShiftTime {
+  MORNING = 'Morning',
+  AFTERNOON = 'Afternoon',
+  EVENING = 'Evening',
+  NIGHT = 'Night',
+}
 
-const StaffModel = User.discriminator<IStaff>('Staff', staffSchema);
+@Schema({ timestamps: true })
+export class Staff extends User {
+  @Prop({ type: String, enum: Object.values(StaffPosition), required: true })
+  position: StaffPosition;
 
-export default StaffModel;
+  @Prop({ type: String, enum: Object.values(ShiftTime), required: true })
+  shiftTime: ShiftTime;
+
+  @Prop({ default: true })
+  isAvailable: boolean;
+}
+
+export const StaffSchema = SchemaFactory.createForClass(Staff);

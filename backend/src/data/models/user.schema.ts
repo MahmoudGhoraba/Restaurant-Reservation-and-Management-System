@@ -1,61 +1,54 @@
-import mongoose, { Document, Schema, Types } from "mongoose";
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { HydratedDocument, Types } from 'mongoose';
 
-export interface IUser extends Document {
+export type UserDocument = HydratedDocument<User>;
+
+export enum UserRole {
+  CUSTOMER = 'Customer',
+  ADMIN = 'Admin',
+  STAFF = 'Staff'
+}
+
+@Schema({
+  timestamps: true,
+  discriminatorKey: "role"
+})
+export class User {
+  _id: Types.ObjectId;
+
+  @Prop({ required: true, trim: true })
   name: string;
+
+  @Prop({ required: true, unique: true, lowercase: true })
   email: string;
+
+  @Prop({ required: true, minlength: 6, select: false })
   password: string;
-  phone?: number;
-  profilePicture?:string;
+
+  @Prop({ trim: true })
+  phone?: string;
+
+  @Prop({
+    type: String,
+    enum: Object.values(UserRole),
+    required: true,
+    default: UserRole.CUSTOMER
+  })
+  role: UserRole;
+
+  @Prop({ default: true })
+  isActive: boolean;
+@Prop({
+    type: Object,
+    default: { temp: null, expiry: null }
+  })
   otp?: {
     temp: number | null;
     expiry: Date | null;
   };
-  role: 'Customer' | 'Admin' | 'Staff';
+
   createdAt: Date;
   updatedAt: Date;
 }
 
-
-const userSchema = new Schema(
-  {
-    name: {
-      type: String,
-      required: true,
-    },
-
-    email: {
-      type: String,
-      required:true
-    },
-
-    password: {
-      type: String,
-      required:true
-    },
-
-    profilePicture: {
-     type: String, 
-    },
-
-   role: {
-        type: String,
-        enum: ['Customer', 'Admin','Staff'],
-        required: true,
-    },
-
-    phone: {
-      type: Number,
-    },
-    otp: {
-        temp:{type:Number ,default:null},
-        expiry: { type: Date, default: null }
-    }
-  },
-  {
-    timestamps: true,
-    discriminatorKey:"role"
-  }
-);
-
-const User = mongoose.model<IUser>("User", userSchema);
-export default User;
+export const UserSchema = SchemaFactory.createForClass(User);

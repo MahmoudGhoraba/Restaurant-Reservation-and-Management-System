@@ -1,55 +1,52 @@
-import mongoose, { Document, Schema, Types } from 'mongoose';
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { HydratedDocument, Types } from 'mongoose';
 
-export interface IReservation extends Document {
-    customer: Types.ObjectId;
-    table: Types.ObjectId;  // ← Add this field
-    reservationDate: Date;
-    reservationTime: string;
-    duration: number; // ← Add duration in minutes
-    numberOfGuests: number;
-    bookingStatus: 'pending' | 'confirmed' | 'canceled';
-    createdAt: Date;
-    updatedAt: Date;
+export type ReservationDocument = HydratedDocument<Reservation>;
+
+export enum BookingStatus {
+  PENDING = 'Pending',
+  CONFIRMED = 'Confirmed',
+  CANCELLED = 'Cancelled',
+  COMPLETED = 'Completed'
 }
 
-const reservationSchema = new Schema<IReservation>({
-    customer: {
-        type: Schema.Types.ObjectId,
-        ref: 'User',
-        required: true
-    },
-    table: {  // ← Add this field
-        type: Schema.Types.ObjectId,
-        ref: 'Table',
-        required: true
-    },
-    reservationDate: {
-        type: Date,
-        required: true
-    },
-    reservationTime: {
-        type: String,
-        required: true,
-        match: /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/ // HH:MM format validation
-    },
-    duration: {
-        type: Number,
-        required: true,
-        min: 30, // Minimum 30 minutes
-        max: 480, // Maximum 8 hours
-        default: 60 // Default 1 hour
-    },
-    numberOfGuests: {
-        type: Number,
-        required: true,
-        min: 1
-    },
-    bookingStatus: {
-        type: String,
-        enum: ['pending', 'confirmed', 'canceled'],
-        default: 'pending'
-    }
-}, { timestamps: true });
+@Schema({ timestamps: true })
+export class Reservation {
+  _id: Types.ObjectId;
 
-const Reservation = mongoose.model<IReservation>("Reservation", reservationSchema);
-export default Reservation;
+  @Prop({ type: Types.ObjectId, ref: 'User', required: true })
+  customer: Types.ObjectId;
+
+  @Prop({ type: Types.ObjectId, ref: 'Table', required: true })
+  table: Types.ObjectId;
+
+  @Prop({ required: true })
+  reservationDate: Date;
+
+  @Prop({ required: true })
+  reservationTime: string;
+
+  @Prop({ required: true, min: 1, max: 20 })
+  numberOfGuests: number;
+
+  @Prop({
+    type: String,
+    enum: Object.values(BookingStatus),
+    default: BookingStatus.PENDING
+  })
+  bookingStatus: BookingStatus;
+
+  @Prop({ trim: true })
+  specialRequests?: string;
+
+  @Prop({ type: Types.ObjectId, ref: 'User' })
+  assignedStaff?: Types.ObjectId;
+
+  @Prop({ type: Types.ObjectId, ref: 'Order' })
+  order?: Types.ObjectId;
+
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export const ReservationSchema = SchemaFactory.createForClass(Reservation);

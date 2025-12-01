@@ -1,22 +1,46 @@
-import mongoose, { Document, Schema } from "mongoose";
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { HydratedDocument, Types } from 'mongoose';
 
-export interface IMenuItem extends Document {
-    name: string;
-    description: string;
-    price: number;
-    availability: boolean;
-    imageUrl?: string; // we can change this
-    category: string;
+export type MenuItemDocument = HydratedDocument<MenuItem>;
+
+export enum MenuCategory {
+  APPETIZERS = 'Appetizers',
+  MAIN_COURSE = 'Main Course',
+  DESSERTS = 'Desserts',
+  BEVERAGES = 'Beverages'
 }
-const MenuItemSchema = new Schema({
-    name: { type: String, required: true },
-    description: { type: String, required: true },
-    price: { type: Number, required: true },
-    availability: { type: Boolean, required: true },
-    imageUrl: { type: String },
-    category: { type: String, required: true },
-}, {
-    timestamps: true
-})
-const MenuItem = mongoose.model<IMenuItem>('MenuItem', MenuItemSchema);
-export default MenuItem;
+
+@Schema({ timestamps: true })
+export class MenuItem {
+  _id: Types.ObjectId;
+
+  @Prop({ required: true, trim: true })
+  name: string;
+
+  @Prop({ required: true, trim: true })
+  description: string;
+
+  @Prop({ required: true, min: 0 })
+  price: number;
+
+  @Prop({
+    type: String,
+    enum: Object.values(MenuCategory),
+    required: true
+  })
+  category: MenuCategory;
+
+  @Prop({ default: true })
+  isAvailable: boolean;
+
+  @Prop({ default: 15 })
+  preparationTime: number;
+
+  @Prop({ type: Types.ObjectId, ref: 'User', required: true })
+  createdBy: Types.ObjectId;
+
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export const MenuItemSchema = SchemaFactory.createForClass(MenuItem);

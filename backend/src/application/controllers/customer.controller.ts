@@ -1,72 +1,53 @@
-import { Request, Response, NextFunction } from "express";
-import CustomerService from "../services/customer.service";
-import catchAsync from "../../infrastructure/utils/catchAsync";
-import AppError from "../../infrastructure/utils/appError";
+import { Controller, Get, Post, Param, Body, UseGuards, Request } from '@nestjs/common';
+import { CustomerService } from '../services/customer.service';
+import { JwtAuthGuard } from '../../middlewares/authMiddleware';
+import { AdminGuard } from '../../middlewares/allowAdminMiddleware';
+import { CreateOrderDto, CreateFeedbackDto } from '../../data/dtos';
 
-class CustomerController {
+@Controller('customers')
+@UseGuards(JwtAuthGuard)
+export class CustomerController {
+  constructor(private readonly customerService: CustomerService) {}
 
-  browseMenu = catchAsync(async (req: Request, res: Response) => {
-    const menu = await CustomerService.browseMenu();
+  @Get('menu')
+  async browseMenu() {
+    return this.customerService.browseMenu();
+  }
 
-    res.status(200).json({
-      status: "success",
-      results: menu.length,
-      data: menu,
-    });
-  });
+  @Post('orders')
+  async placeOrder(@Body() dto: CreateOrderDto, @Request() req) {
+    dto.customer = req.user.id;
+    return this.customerService.placeOrder(dto);
+  }
 
-  placeOrder = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    if (!req.user)
-      return next(new AppError("User not authenticated", 401));
+  @Get('orders/:orderId')
+  async trackOrder(@Param('orderId') orderId: string) {
+    return this.customerService.trackOrder(orderId);
+  }
 
-    const customerId =
-      typeof req.user.id === "string" ? req.user.id : req.user.id.toHexString();
+  @Post('feedback')
+  async giveFeedback(@Body() dto: CreateFeedbackDto, @Request() req) {
+    dto.customer = req.user.id;
+    return this.customerService.giveFeedback(dto);
+  }
 
-    const order = await CustomerService.placeOrder(
-      customerId,
-      req.body.items,
-      req.body.paymentId
-    );
+  @Get('orders')
+  async getOrderHistory(@Request() req) {
+    return this.customerService.getOrderHistory(req.user.id);
+  }
 
-    res.status(201).json({
-      status: "success",
-      data: order,
-    });
-  });
+  @Get('profile')
+  async getProfile(@Request() req) {
+    return this.customerService.getCustomerProfile(req.user.id);
+  }
 
-  trackOrder = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    const order = await CustomerService.trackOrder(req.params.orderId);
+  @Get('reservations')
+  async getReservations(@Request() req) {
+    return this.customerService.getCustomerReservations(req.user.id);
+  }
 
-    if (!order) return next(new AppError("Order not found", 404));
-
-    res.status(200).json({
-      status: "success",
-      data: order,
-    });
-  });
-
-  giveFeedback = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    const { referenceId, rating, comment } = req.body;
-
-    if (!req.user) {
-      return next(new AppError("User not authenticated", 401));
-    }
-
-    const customerId =
-      typeof req.user.id === "string" ? req.user.id : req.user.id.toHexString();
-
-    const result = await CustomerService.giveFeedback(
-      customerId,
-      referenceId,
-      rating,
-      comment
-    );
-
-    res.status(201).json({
-      status: "success",
-      data: result,
-    });
-  });
+  @Get('feedback')
+  async getFeedback(@Request() req) {
+    return this.customerService.getCustomerFeedback(req.user.id);
+  }
 }
-
-export default new CustomerController();

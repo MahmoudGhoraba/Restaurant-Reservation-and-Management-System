@@ -1,45 +1,90 @@
-import { isAnyArrayBuffer } from "util/types";
-import Feedback, {IFeedback} from "../../data/models/feedback.schema";
-import {Types} from "mongoose";
+import { Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import { Feedback, FeedbackDocument } from '../../data/models/feedback.schema';
+import { CreateFeedbackDto, UpdateFeedbackDto } from '../../data/dtos';
 
-interface CreateFeedbackInput {
-    customer: Types.ObjectId | string;
-    referenceId: Types.ObjectId | string;
-    rating: number;
-    comments?: string;
-}
+@Injectable()
+export class FeedbackService {
+  constructor(
+    @InjectModel(Feedback.name) private feedbackModel: Model<FeedbackDocument>,
+  ) {}
 
-class FeedbackService {
-    async createFeedback(input: CreateFeedbackInput): Promise<IFeedback> {
-        const feedback = new Feedback({
-            customer: input.customer,
-            referenceId: input.referenceId,
-            rating: input.rating,
-            comments: input.comments
+  async createFeedback(data: CreateFeedbackDto): Promise<FeedbackDocument> {
+    const feedback = new this.feedbackModel({
+      customer: data.customer,
+      referenceType: data.referenceType,
+      referenceId: data.referenceId,
+      rating: data.rating,
+      comments: data.comments,
         });
-        return await feedback.save();
-    }
-    async updateFeedback(feedbackId: string, updates: Partial<CreateFeedbackInput>): Promise<IFeedback | null> {
-        return Feedback.findByIdAndUpdate(feedbackId, updates, { new: true });
+    return feedback.save();
     }
 
-    async getFeedbackById(feedbackId: string): Promise<IFeedback | null> {
-        return Feedback.findById(feedbackId);
-    }
-    async getAllFeedback(filters: any = {}) {
-        const query : any = {}; 
+  async updateFeedback(feedbackId: string, data: UpdateFeedbackDto): Promise<FeedbackDocument> {
+    const updateData: any = {};
+    if (data.rating) updateData.rating = data.rating;
+    if (data.comments) updateData.comments = data.comments;
 
-        if(filters.rating) {
-            query.rating= filters.rating;
+    const feedback = await this.feedbackModel.findByIdAndUpdate(feedbackId, updateData, { new: true });
+    if (!feedback) {
+      throw new Error('FEEDBACK_NOT_FOUND');
+    }
+    return feedback;
+    }
+
+  async getFeedbackById(feedbackId: string): Promise<FeedbackDocument> {
+    const feedback = await this.feedbackModel.findById(feedbackId)
+      .populate('customer', 'name email');
+    if (!feedback) {
+      throw new Error('FEEDBACK_NOT_FOUND');
+    }
+    return feedback;
+  }
+
+  async getAllFeedback(filters: { rating?: number; customer?: string } = {}): Promise<FeedbackDocument[]> {
+    const query: any = {};
+
+    if (filters.rating) {
+      query.rating = filters.rating;
         }
-        if(filters.customer) {
+    if (filters.customer) {
             query.customer = filters.customer;
         }
-        return Feedback.find(query).populate('customer', 'name email').sort({ date: -1 });
+
+    return this.feedbackModel.find(query)
+      .populate('customer', 'name email')
+      .sort({ createdAt: -1 });
     }
-    async deleteFeedback(feedbackId: string): Promise<IFeedback | null> {
-        return Feedback.findByIdAndDelete(feedbackId);
+
+  async getFeedbackByReference(referenceType: string, referenceId: string): Promise<FeedbackDocument[]> {
+    return this.feedbackModel.find({ referenceType, referenceId })
+      .populate('customer', 'name email')
+      .sort({ createdAt: -1 });
+  }
+
+  async deleteFeedback(feedbackId: string): Promise<void> {
+    const feedback = await this.feedbackModel.findByIdAndDelete(feedbackId);
+    if (!feedback) {
+      throw new Error('FEEDBACK_NOT_FOUND');
     }
-        
+  }
+
+  async getAverageRating(referenceType?: string, referenceId?: string): Promise<number> {
+    const match: any = {};
+    if (referenceType) match.referenceType = referenceType;
+    if (referenceId) match.referenceId = referenceId;
+
+    const result = await this.feedbackModel.aggregate([
+      { $match: match },
+      {
+        $group: {
+          _id: null,
+          averageRating: { $avg: '$rating' }
+        }
+      }
+    ]);
+
+    return result[0]?.averageRating || 0;
+  }
 }
-export default new FeedbackService;

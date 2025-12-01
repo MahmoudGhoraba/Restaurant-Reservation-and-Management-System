@@ -1,60 +1,70 @@
-import CustomerModel, { ICustomer } from "../../data/models/customer.schema";
-import User from "../../data/models/user.schema";
-import MenuItem from "../../data/models/menuitem.schema";
-import Order from "../../data/models/order.schema";
-import Feedback from "../../data/models/feedback.schema";
-import { Types } from "mongoose";
+import { Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import { Customer, CustomerDocument } from '../../data/models/customer.schema';
+import { MenuItem, MenuItemDocument } from '../../data/models/menuitem.schema';
+import { Order, OrderDocument } from '../../data/models/order.schema';
+import { Feedback, FeedbackDocument } from '../../data/models/feedback.schema';
+import { MenuItemService } from './menuitem.service';
+import { OrderService } from './order.service';
+import { FeedbackService } from './feedback.service';
+import { CreateOrderDto, CreateFeedbackDto, UpdateCustomerDto } from '../../data/dtos';
 
-class CustomerService {
+@Injectable()
+export class CustomerService {
+  constructor(
+    @InjectModel(Customer.name) private customerModel: Model<CustomerDocument>,
+    @InjectModel(MenuItem.name) private menuItemModel: Model<MenuItemDocument>,
+    @InjectModel(Order.name) private orderModel: Model<OrderDocument>,
+    @InjectModel(Feedback.name) private feedbackModel: Model<FeedbackDocument>,
+    private menuItemService: MenuItemService,
+    private orderService: OrderService,
+    private feedbackService: FeedbackService,
+  ) {}
 
-
-  async browseMenu() {
-    return MenuItem.find().populate("category", "name");
+  async browseMenu(): Promise<MenuItemDocument[]> {
+    return this.menuItemModel.find({ isAvailable: true }).populate('createdBy', 'name');
   }
 
-  async placeOrder(customerId: string, items: any[], paymentId?: string) {
-    let totalAmount = 0;
-
-    const processedItems = items.map((i) => {
-      const sub = i.price * i.quantity;
-      totalAmount += sub;
-
-      return {
-        menuItem: new Types.ObjectId(i.menuItem),
-        name: i.name,
-        quantity: i.quantity,
-        price: i.price,
-        subTotal: sub,
-      };
-    });
-
-    const order = new Order({
-      customer: new Types.ObjectId(customerId),
-      items: processedItems,
-      totalAmount,
-      payment: paymentId ? new Types.ObjectId(paymentId) : undefined,
-    });
-
-    return order.save();
+  async placeOrder(data: CreateOrderDto): Promise<OrderDocument> {
+    return this.orderService.createOrder(data);
   }
 
-  async trackOrder(orderId: string) {
-    return Order.findById(orderId)
-      .populate("items.menuItem", "name price")
-      .populate("customer", "name");
+  async trackOrder(orderId: string): Promise<OrderDocument> {
+    return this.orderService.getOrderById(orderId);
   }
 
+  async getOrderHistory(customerId: string): Promise<OrderDocument[]> {
+    return this.orderService.getOrdersByCustomer(customerId);
+  }
 
-  async giveFeedback(customerId: string, referenceId: string, rating: number, comment: string) {
-    const feedback = new Feedback({
-      customer: new Types.ObjectId(customerId),
-      referenceId: new Types.ObjectId(referenceId),
-      rating,
-      comments: comment,
-    });
+  async giveFeedback(data: CreateFeedbackDto): Promise<FeedbackDocument> {
+    return this.feedbackService.createFeedback(data);
+  }
 
-    return feedback.save();
+  async getCustomerProfile(customerId: string): Promise<CustomerDocument> {
+    const customer = await this.customerModel.findById(customerId);
+    if (!customer) {
+      throw new Error('CUSTOMER_NOT_FOUND');
+    }
+    return customer;
+  }
+
+  async updateCustomerProfile(customerId: string, data: UpdateCustomerDto): Promise<CustomerDocument> {
+    const customer = await this.customerModel.findByIdAndUpdate(customerId, data, { new: true });
+    if (!customer) {
+      throw new Error('CUSTOMER_NOT_FOUND');
+    }
+    return customer;
+  }
+
+  async getCustomerReservations(customerId: string): Promise<any[]> {
+    // This would need to be implemented with ReservationService injection
+    // For now, return empty array
+    return [];
+  }
+
+  async getCustomerFeedback(customerId: string): Promise<FeedbackDocument[]> {
+    return this.feedbackService.getAllFeedback({ customer: customerId });
   }
 }
-
-export default new CustomerService();

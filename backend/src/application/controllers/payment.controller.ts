@@ -1,100 +1,64 @@
-import { Request, Response, NextFunction } from "express";
-import PaymentService from "../services/payment.service";
-import catchAsync from "../../infrastructure/utils/catchAsync";
-import AppError from "../../infrastructure/utils/appError";
+import { Controller, Get, Post, Put, Param, Body, UseGuards, Request, HttpException, HttpStatus } from '@nestjs/common';
+import { PaymentService } from '../services/payment.service';
+import { JwtAuthGuard } from '../../middlewares/authMiddleware';
+import { AdminGuard } from '../../middlewares/allowAdminMiddleware';
+import { CreatePaymentDto, UpdatePaymentDto } from '../../data/dtos';
+import { PaymentStatus } from 'src/data/models';
 
-class PaymentController {
-    // Process a new payment
-processPayment = catchAsync(
-    async (req: Request, res: Response, next: NextFunction) => {
-            const { order, reservation, amount, paymentMethod, cardDetails } = req.body;
-            // 1. Basic Validation
-            if (!amount || !paymentMethod) {
-                return next(new AppError("Amount and Payment Method are required.", 400));
-            }
-            // 2. Ensure linkage (Must have Order OR Reservation)(Ghoraba)
-            if (!order && !reservation) {
-                return next(new AppError("Payment must be linked to an Order or Reservation.", 400));
-            }
-            // 3. Online Payment Validation (Mocking Context)
-            if (paymentMethod === "Online" && !cardDetails) {
-                return next(new AppError("Card details are required for online transactions.", 400));
-            }
-            // 4. Call Service
-            const payment = await PaymentService.createPayment({
-                order: order || undefined,
-                reservation: reservation || undefined,
-                amount,
-                paymentMethod,
-                cardDetails,
-            });
-            res.status(200).json({
-                status: "success",
-                data: payment,
-            });
-        }
-    );
-    // Get all payments (Admin/Manager)
-    getAllPayments = catchAsync(
-        async (_req: Request, res: Response, _next: NextFunction) => {
-            const payments = await PaymentService.getAllPayments();
+@Controller('payments')
+@UseGuards(JwtAuthGuard)
+export class PaymentController {
+  constructor(private readonly paymentService: PaymentService) {}
 
-            res.status(200).json({
-                status: "success",
-                results: payments.length,
-                data: payments,
-            });
-        }
-    );
-    // Get a single payment receipt by ID
-    getPaymentById = catchAsync(
-        async (req: Request, res: Response, next: NextFunction) => {
-            const payment = await PaymentService.getPaymentById(req.params.id);
-            if (!payment) {
-                return next(new AppError("Payment transaction not found", 404));
-            }
-            res.status(200).json({
-                status: "success",
-                data: payment,
-            });
-        }
-    );
+  @Post()
+  async createPayment(@Body() dto: CreatePaymentDto, @Request() req) {
+    if (!dto.amount || !dto.paymentMethod) {
+      throw new HttpException('Amount and payment method are required', HttpStatus.BAD_REQUEST);
+    }
 
-    // Update payment status (Refund or Manual Confirmation)
-    updatePaymentStatus = catchAsync(
-        async (req: Request, res: Response, next: NextFunction) => {
-            const { status } = req.body;
-            const allowed = ["Paid", "Pending", "Refunded"] ;
-            if (!allowed.includes(status)) {
-                return next(new AppError("Invalid status value", 400));
-            }
-            const payment = await PaymentService.updatePaymentStatus(req.params.id, status);
+    if (!dto.order && !dto.reservation) {
+      throw new HttpException('Payment must be linked to an Order or Reservation', HttpStatus.BAD_REQUEST);
+    }
 
-            if (!payment) {
-                return next(new AppError("Payment transaction not found", 404));
-            }
-            res.status(200).json({
-                status: "success",
-                data: payment,
-            });
-        }
-    );
+    dto.customer = req.user.id;
+    return this.paymentService.createPayment(dto);
+  }
 
-    // Get all payments for a specific Order(Ghoraba)
-    getPaymentsByOrder = catchAsync(
-        async (req: Request, res: Response, next: NextFunction) => {
-            const { orderId } = req.params;
+  @Get()
+  @UseGuards(AdminGuard)
+  async getAllPayments() {
+    return this.paymentService.getAllPayments();
+  }
 
-            const payments = await PaymentService.getPaymentsByOrder(orderId);
+  @Get('my-payments')
+  async getPaymentsByCustomer(@Request() req) {
+    return this.paymentService.getPaymentsByCustomer(req.user.id);
+  }
 
-            // We return 200 with an empty array if none found, as it's a valid query
-            res.status(200).json({
-                status: "success",
-                results: payments.length,
-                data: payments,
-            });
-        }
-    );
+  @Get('status/:status')
+  @UseGuards(AdminGuard)
+  async getPaymentsByStatus(@Param('status') status: string) {
+    return this.paymentService.getPaymentsByStatus(status);
+  }
+
+  @Get(':id')
+  async getPaymentById(@Param('id') id: string) {
+    return this.paymentService.getPaymentById(id);
+  }
+
+  @Put(':id')
+  @UseGuards(AdminGuard)
+  async updatePayment(@Param('id') id: string, @Body() dto: UpdatePaymentDto) {
+    return this.paymentService.updatePayment(id, dto);
+  }
+
+  @Put(':id/status')
+  @UseGuards(AdminGuard)
+  async updatePaymentStatus(@Param('id') id: string, @Body('status') status: PaymentStatus) {
+    const allowedStatuses = ['Pending', 'Paid', 'Failed', 'Refunded', 'Cancelled'];
+    if (!allowedStatuses.includes(status)) {
+      throw new HttpException('Invalid status value', HttpStatus.BAD_REQUEST);
+    }
+    return this.paymentService.updatePayment(id, { status });
+  }
 }
-
-export default new PaymentController();

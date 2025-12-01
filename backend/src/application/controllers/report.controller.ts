@@ -1,48 +1,43 @@
-import { Request, Response, NextFunction} from 'express';
-import ReportService from '../services/report.service';
-import catchAsync from '../../infrastructure/utils/catchAsync';
-import AppError from '../../infrastructure/utils/appError';
+import { Controller, Get, Post, Delete, Param, Body, Query, UseGuards, Request } from '@nestjs/common';
+import { ReportService } from '../services/report.service';
+import { JwtAuthGuard } from '../../middlewares/authMiddleware';
+import { AdminGuard } from '../../middlewares/allowAdminMiddleware';
 
-class ReportController {
-    generateReport = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-        const report = await ReportService.generateReport(req.body);
-        res.status(201).json({
-            status: 'success',
-            data: report
-        });
-    });
+@Controller('reports')
+@UseGuards(JwtAuthGuard, AdminGuard)
+export class ReportController {
+  constructor(private readonly reportService: ReportService) {}
 
-    getReportById = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-        const report = await ReportService.getReportById(req.params.id);
-        if(!report) {
-            return next(new AppError('Report not found', 404));
+  @Post()
+  async generateReport(@Body() dto: any, @Request() req) {
+    const reportData = {
+      generatedBy: req.user.id,
+      reportType: dto.reportType,
+      title: dto.title,
+      description: dto.description,
+      dateRange: dto.dateRange,
+      content: dto.content,
+    };
+    return this.reportService.generateReport(reportData);
+  }
+
+  @Get()
+  async getAllReports(@Query() filters: { reportType?: string; generatedBy?: string }) {
+    return this.reportService.getAllReports(filters);
+  }
+
+  @Get('type/:reportType')
+  async getReportsByType(@Param('reportType') reportType: string) {
+    return this.reportService.getReportsByType(reportType);
+  }
+
+  @Get(':id')
+  async getReportById(@Param('id') id: string) {
+    return this.reportService.getReportById(id);
         }
-        res.status(200).json({
-            status: 'success',
-            data: report
-        });
-    })
-    ;
 
-    getAllReports = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-        const filters = req.query;
-        const reports = await ReportService.getAllReports(filters);
-        res.status(200).json({
-            status: 'success',
-            results: reports.length,
-            data: reports
-        });
-    });
-
-    deleteReport = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-        const report = await ReportService.deleteReport(req.params.id);
-        if(!report) {
-            return next(new AppError('Report not found', 404));
-        }
-        res.status(204).json({
-            status: 'success',
-            data: null
-        });
-    });
-}   
-export default new ReportController();
+  @Delete(':id')
+  async deleteReport(@Param('id') id: string) {
+    await this.reportService.deleteReport(id);
+  }
+}

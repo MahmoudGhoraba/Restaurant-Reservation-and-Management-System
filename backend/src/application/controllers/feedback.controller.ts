@@ -1,60 +1,54 @@
-import { Request, Response , NextFunction} from 'express';
-import FeedbackService  from '../services/feedback.service';
-import catchAsync from '../../infrastructure/utils/catchAsync';
-import AppError from '../../infrastructure/utils/appError';
+import { Controller, Get, Post, Put, Delete, Param, Body, Query, UseGuards } from '@nestjs/common';
+import { FeedbackService } from '../services/feedback.service';
+import { JwtAuthGuard } from '../../middlewares/authMiddleware';
+import { AdminGuard } from '../../middlewares/allowAdminMiddleware';
+import { CreateFeedbackDto, UpdateFeedbackDto } from '../../data/dtos';
 
-class FeedbackController {
-    createFeedback = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-        const feedback = await FeedbackService.createFeedback(req.body);
-        res.status(201).json({
-            status: 'success',
-            data: feedback
-        });
-    });
+@Controller('feedback')
+@UseGuards(JwtAuthGuard)
+export class FeedbackController {
+  constructor(private readonly feedbackService: FeedbackService) {}
 
-    updateFeedback = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-        const feedback = await FeedbackService.updateFeedback(req.params.id, req.body);
-        if(!feedback) {
-            return next(new AppError('Feedback not found', 404));
-        }
-        res.status(200).json({
-            status: 'success',
-            data: feedback
-        });
-    });
+  @Post()
+  async createFeedback(@Body() dto: CreateFeedbackDto) {
+    return this.feedbackService.createFeedback(dto);
+  }
 
-    getFeedbackById = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-        const feedback = await FeedbackService.getFeedbackById(req.params.id);
-        if(!feedback) {
-            return next(new AppError('Feedback not found', 404));
-        }
-        res.status(200).json({
-            status: 'success',
-            data: feedback
-        });
-    });
+  @Put(':id')
+  async updateFeedback(@Param('id') id: string, @Body() dto: UpdateFeedbackDto) {
+    return this.feedbackService.updateFeedback(id, dto);
+  }
 
-    getAllFeedback = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-        const filters = req.query;
-        const feedbacks = await FeedbackService.getAllFeedback(filters);
-        res.status(200).json({
-            status: 'success',
-            results: feedbacks.length,
-            data: feedbacks
-        });
-    });
+  @Get(':id')
+  async getFeedbackById(@Param('id') id: string) {
+    return this.feedbackService.getFeedbackById(id);
+  }
 
-    deleteFeedback = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-        const feedback = await FeedbackService.deleteFeedback(req.params.id);
-        if(!feedback) {
-            return next(new AppError('Feedback not found', 404));
-        }
-        res.status(204).json({
-            status: 'success',
-            data: null
-        });
-    });
+  @Get()
+  async getAllFeedback(@Query() filters: { rating?: number; customer?: string }) {
+    return this.feedbackService.getAllFeedback(filters);
+  }
+
+  @Get('reference/:referenceType/:referenceId')
+  async getFeedbackByReference(
+    @Param('referenceType') referenceType: string,
+    @Param('referenceId') referenceId: string
+  ) {
+    return this.feedbackService.getFeedbackByReference(referenceType, referenceId);
+  }
+
+  @Delete(':id')
+  async deleteFeedback(@Param('id') id: string) {
+    await this.feedbackService.deleteFeedback(id);
+  }
+
+  @Get('average/:referenceType/:referenceId')
+  async getAverageRating(
+    @Param('referenceType') referenceType: string,
+    @Param('referenceId') referenceId: string
+  ) {
+    const average = await this.feedbackService.getAverageRating(referenceType, referenceId);
+    return { averageRating: average };
+  }
 }
-
-export default new FeedbackController();
 

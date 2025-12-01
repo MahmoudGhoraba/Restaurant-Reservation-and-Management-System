@@ -1,18 +1,111 @@
-import Payment from "../../data/models/payments.schema";
-import Order from "../../data/models/order.schema";
-import { Types, Document } from "mongoose";
+import { Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import { Payment, PaymentDocument } from '../../data/models/payments.schema';
+import { Order, OrderDocument } from '../../data/models/order.schema';
+import { CreatePaymentDto, UpdatePaymentDto } from '../../data/dtos';
 
-interface CreatePaymentInput {
-    order?: Types.ObjectId | string;
-    reservation?: Types.ObjectId | string;
-    amount: number;
-    paymentMethod: "Cash" | "Card" | "Online";
-    cardDetails?: any; // mocking in milestone 3
-}
+@Injectable()
+export class PaymentService {
+  constructor(
+    @InjectModel(Payment.name) private paymentModel: Model<PaymentDocument>,
+    @InjectModel(Order.name) private orderModel: Model<OrderDocument>,
+  ) {}
 
-//  (Simulating external processing) related Bank API by mocking
-const mockBankCharge = async (card: any, amount: number) => {
-    return new Promise<{ success: boolean; transId: string }>((resolve) => {
+  async createPayment(data: CreatePaymentDto): Promise<PaymentDocument> {
+    let status: 'Pending' | 'Paid' | 'Failed' = 'Pending';
+    let transactionId: string | undefined;
+
+    // Handle Online Payment Logic
+    if (data.paymentMethod === 'Online') {
+      try {
+        const bankResponse = await this.mockBankCharge({}, data.amount);
+        if (bankResponse.success) {
+          status = 'Paid';
+          transactionId = bankResponse.transId;
+        } else {
+          status = 'Failed';
+        }
+      } catch (error) {
+        status = 'Failed';
+      }
+    }
+
+    // Handle Card Payment Logic (simplified for MVP)
+    if (data.paymentMethod === 'Card') {
+      status = 'Paid';
+      transactionId = `CARD_${Date.now()}`;
+    }
+
+    // Handle Cash Payment Logic
+    if (data.paymentMethod === 'Cash') {
+      status = 'Pending'; // Cash payments need to be confirmed
+    }
+
+    const payment = new this.paymentModel({
+      paymentNumber: await this.generatePaymentNumber(),
+      order: data.order,
+      reservation: data.reservation,
+      customer: data.customer,
+      amount: data.amount,
+      paymentMethod: data.paymentMethod,
+      status,
+      transactionId,
+      finalAmount: data.amount, // Simplified for MVP
+    });
+
+    return payment.save();
+  }
+
+  async getPaymentById(paymentId: string): Promise<PaymentDocument> {
+    const payment = await this.paymentModel.findById(paymentId)
+      .populate('order')
+      .populate('reservation')
+      .populate('customer', 'name email');
+    if (!payment) {
+      throw new Error('PAYMENT_NOT_FOUND');
+    }
+    return payment;
+  }
+
+  async getPaymentsByCustomer(customerId: string): Promise<PaymentDocument[]> {
+    return this.paymentModel.find({ customer: customerId })
+      .populate('order')
+      .populate('reservation')
+      .sort({ createdAt: -1 });
+  }
+
+  async updatePayment(paymentId: string, data: UpdatePaymentDto): Promise<PaymentDocument> {
+    const updateData: any = {};
+    if (data.status) updateData.status = data.status;
+    if (data.paymentMethod) updateData.paymentMethod = data.paymentMethod;
+    if (data.transactionId) updateData.transactionId = data.transactionId;
+
+    const payment = await this.paymentModel.findByIdAndUpdate(paymentId, updateData, { new: true });
+    if (!payment) {
+      throw new Error('PAYMENT_NOT_FOUND');
+    }
+    return payment;
+  }
+
+  async getAllPayments(): Promise<PaymentDocument[]> {
+    return this.paymentModel.find()
+      .populate('order')
+      .populate('reservation')
+      .populate('customer', 'name email')
+      .sort({ createdAt: -1 });
+  }
+
+  async getPaymentsByStatus(status: string): Promise<PaymentDocument[]> {
+    return this.paymentModel.find({ status })
+      .populate('order')
+      .populate('reservation')
+      .populate('customer', 'name email')
+      .sort({ createdAt: -1 });
+  }
+
+  private async mockBankCharge(card: any, amount: number): Promise<{ success: boolean; transId: string }> {
+    return new Promise((resolve) => {
         setTimeout(() => {
             resolve({
                 success: true,
@@ -20,80 +113,11 @@ const mockBankCharge = async (card: any, amount: number) => {
             });
         }, 500);
     });
-};
+  }
 
-class PaymentService {
-    async createPayment({
-       order,
-       reservation,
-       amount,
-       paymentMethod,
-       cardDetails,
-    }:CreatePaymentInput): Promise<Document> {
-        let status = "Pending";
-        let transactionId = undefined;
-
-        // 1. Handle Online Payment Logic
-        if (paymentMethod === "Online") {
-            try {
-                const bankResponse = await mockBankCharge(cardDetails, amount);
-                if (bankResponse.success) {
-                    status = "Paid";
-                    transactionId = bankResponse.transId;
-                }
-            } catch (error) {
-                throw new Error("Bank transaction failed.");
-            }
-        } else {
-            // 2. Handle Cash/Card (Physical)
-            // Assuming Cash is marked Paid immediately for this system,
-            // or you can set it to 'Pending' if you need Manager approval.
-            status = "Paid";
-        }
-
-        // 3. Create the Payment Document
-        const newPayment = new Payment({
-            order,
-            reservation,
-            amount,
-            paymentMethod,
-            status,
-            transactionId,
-        });
-
-        const savedPayment = await newPayment.save();
-
-        return savedPayment;
-    }
-
-    async getAllPayments(): Promise<Document[]> {
-        return Payment.find()
-            .populate("order", "totalAmount status")      // Show minimal order info
-            .populate("reservation", "reservationDate");  // Show minimal reservation info
-    }
-
-    async getPaymentById(paymentId: string): Promise<Document | null> {
-        return Payment.findById(paymentId)
-            .populate("order")
-            .populate("reservation");
-    }
-
-    async updatePaymentStatus(
-        paymentId: string,
-        status: "Paid" | "Pending" | "Refunded"
-    ): Promise<Document | null> {
-        const updatedPayment = await Payment.findByIdAndUpdate(
-            paymentId,
-            { status },
-            { new: true }
-        );
-        return updatedPayment;
-    }
-
-    // Get all payments for a specific Order
-    async getPaymentsByOrder(orderId: string): Promise<Document[]> {
-        return Payment.find({ order: orderId });
+  private async generatePaymentNumber(): Promise<string> {
+    const count = await this.paymentModel.countDocuments();
+    const timestamp = Date.now();
+    return `PAY-${timestamp}-${String(count + 1).padStart(4, '0')}`;
     }
 }
-
-export default new PaymentService();

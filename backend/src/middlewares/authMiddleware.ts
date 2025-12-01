@@ -1,61 +1,77 @@
-import { Request, Response, NextFunction } from "express";
-import jwt from "jsonwebtoken";
+import { Injectable, CanActivate, ExecutionContext, UnauthorizedException, ForbiddenException } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
+import jwt from 'jsonwebtoken';
 
 const secretKey = process.env.JWT_SECRET || 'default_secret_key';
 
 interface JwtPayload {
   user: {
-    id: string;
+    userId?: string;
+    id?: string;
     role: string;
     email?: string;
+    adminLevel?: string;
   };
   [key: string]: any;
 }
 
-const authenticateMiddleware = (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): void => {
-  try {
-    const cookie = req.cookies;
-    console.log('Inside authentication middleware');
-    
-    if (!cookie) {
-      res.status(401).json({ message: 'No cookies found' });
-      return;
-    }
-    
-    const token = cookie.token;
-    
-    if (!token) {
-      res.status(405).json({ message: 'No token provided in cookie' });
-      return;
-    }
-    
-    if (!secretKey) {
-      console.error('SECRET_KEY is not defined in environment variables');
-      res.status(500).json({ message: 'Internal server error' });
-      return;
-    }
-    
-    jwt.verify(token, secretKey, (error: any, decoded: any) => {
-      if (error) {
-        console.error('JWT verification failed:', error.message);
-        res.status(403).json({ message: 'Invalid or expired token' });
-        return;
-      }
-      
-      const payload = decoded as JwtPayload;
-      req.user = payload.user;
-      console.log('User authenticated:', req.user);
-      next();
-    });
-  } catch (err) {
-    console.error('Unexpected error in auth middleware:', err);
-    res.status(500).json({ message: 'Internal server error' });
-    return;
-  }
-};
+@Injectable()
+export class JwtAuthGuard implements CanActivate {
+  constructor(private reflector: Reflector) {}
 
-export default authenticateMiddleware;
+  async canActivate(context: ExecutionContext): Promise<boolean> {
+    const request = context.switchToHttp().getRequest();
+    const response = context.switchToHttp().getResponse();
+
+    try {
+      let token: string | undefined;
+
+      // Check for token in Authorization header (Bearer token)
+      const authHeader = request.headers.authorization;
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        token = authHeader.substring(7);
+        console.log('Token found in Authorization header');
+      }
+      // Fallback to cookie-based authentication
+      else if (request.cookies && request.cookies.token) {
+        token = request.cookies.token;
+        console.log('Token found in cookie');
+      }
+
+      if (!token) {
+        throw new UnauthorizedException('No token provided. Please provide token in Authorization header (Bearer token) or cookie.');
+      }
+
+      if (!secretKey) {
+        console.error('SECRET_KEY is not defined in environment variables');
+        throw new ForbiddenException('Internal server error');
+      }
+
+      const payload = jwt.verify(token, secretKey) as JwtPayload;
+      const userFromToken = payload.user;
+
+      // Map userId to id for consistency
+      request.user = {
+        id: userFromToken.userId || userFromToken.id || '',
+        role: userFromToken.role,
+        email: userFromToken.email,
+        ...(userFromToken.adminLevel && { adminLevel: userFromToken.adminLevel })
+      };
+
+      // Also store userId for compatibility
+      request.user.userId = userFromToken.userId || userFromToken.id;
+
+      console.log('User authenticated:', request.user);
+      return true;
+
+    } catch (error) {
+      if (error instanceof jwt.JsonWebTokenError) {
+        throw new UnauthorizedException('Invalid or expired token');
+      }
+      if (error instanceof jwt.TokenExpiredError) {
+        throw new UnauthorizedException('Token has expired');
+      }
+      throw error;
+    }
+  }
+}

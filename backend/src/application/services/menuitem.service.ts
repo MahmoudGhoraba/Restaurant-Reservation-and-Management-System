@@ -1,49 +1,48 @@
-import MenuItem, { IMenuItem } from "../../data/models/menuitem.schema";
-import { Document } from "mongoose";
+import { Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import { MenuItem, MenuItemDocument } from '../../data/models/menuitem.schema';
+import { CreateMenuItemDto, UpdateMenuItemDto } from '../../data/dtos';
 
-export interface IMenuItemService {
-  createMenuItem(
-    menuItemDetails: Partial<IMenuItem & Document>
-  ): Promise<IMenuItem & Document>;
-  getMenuItemById(id: string): Promise<(IMenuItem & Document) | null>;
-  updateMenuItem(
-    id: string,
-    updateDetails: Partial<IMenuItem & Document>
-  ): Promise<(IMenuItem & Document) | null>;
-  deleteMenuItem(id: string): Promise<(IMenuItem & Document) | null>;
-  getAllMenuItems(): Promise<(IMenuItem & Document)[]>;
+@Injectable()
+export class MenuItemService {
+  constructor(
+    @InjectModel(MenuItem.name) private menuItemModel: Model<MenuItemDocument>,
+  ) {}
+
+  async createMenuItem(data: CreateMenuItemDto): Promise<MenuItemDocument> {
+    const menuItem = new this.menuItemModel(data);
+    return menuItem.save();
+  }
+
+  async getMenuItemById(id: string): Promise<MenuItemDocument> {
+    const item = await this.menuItemModel.findById(id);
+    if (!item) {
+      throw new Error('MENU_ITEM_NOT_FOUND');
+    }
+    return item;
+  }
+
+  async updateMenuItem(id: string, data: UpdateMenuItemDto): Promise<MenuItemDocument> {
+    const item = await this.menuItemModel.findByIdAndUpdate(id, data, { new: true });
+    if (!item) {
+      throw new Error('MENU_ITEM_NOT_FOUND');
+    }
+    return item;
+  }
+
+  async deleteMenuItem(id: string): Promise<void> {
+    const item = await this.menuItemModel.findByIdAndDelete(id);
+    if (!item) {
+      throw new Error('MENU_ITEM_NOT_FOUND');
+    }
+  }
+
+  async getAllMenuItems(): Promise<MenuItemDocument[]> {
+    return this.menuItemModel.find({ isAvailable: true });
+  }
+
+  async getMenuItemsByCategory(category: string): Promise<MenuItemDocument[]> {
+    return this.menuItemModel.find({ category, isAvailable: true });
+  }
 }
-
-class MenuItemService implements IMenuItemService {
-  async createMenuItem(
-    menuItemDetails: Partial<IMenuItem & Document>
-  ): Promise<IMenuItem & Document> {
-    const menuitem = new MenuItem(menuItemDetails)
-    return menuitem.save()
-  }
-
-  async getMenuItemById(id: string): Promise<(IMenuItem & Document) | null> {
-    const item = await MenuItem.findById(id)
-    return item;
-  }
-
-  async updateMenuItem(id: string, updateDetails: Partial<IMenuItem & Document>
-  ): Promise<(IMenuItem & Document) | null> {
-    const item = await MenuItem.findByIdAndUpdate(id, updateDetails, { new: true })
-    return item;
-
-  }
-
-  async deleteMenuItem(id: string): Promise<(IMenuItem & Document) | null> {
-    const item = await MenuItem.findByIdAndDelete(id);
-    return item;
-  }
-
-  async getAllMenuItems(): Promise<(IMenuItem & Document)[]> {
-    const items = await MenuItem.find();
-    return items;
-  }
-}
-
-
-export default new MenuItemService;

@@ -1,132 +1,106 @@
-import Order from "../../data/models/order.schema";
-import { Types, FilterQuery, Document } from "mongoose";
-import Reservation from "../../data/models/reservation.schema";
-import TableService from "./table.service";
+import { Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import { Order, OrderDocument } from '../../data/models/order.schema';
+import { Reservation, ReservationDocument } from '../../data/models/reservation.schema';
+import { CreateOrderDto, UpdateOrderDto } from '../../data/dtos';
 
-interface CreateOrderInput {
-  customer: Types.ObjectId | string;
-  staff?: Types.ObjectId | string | null;
-  items: Array<{
-    menuItem: Types.ObjectId | string;
-    name: string;
-    quantity: number;
-    price: number;
-  }>;
-  payment?: Types.ObjectId | string | null;
-  orderType?: "Takeaway" | "DineIn" | "Delivery";
-  reservation?: Types.ObjectId | string | null;
-  table?: Types.ObjectId | string | null;
-}
+@Injectable()
+export class OrderService {
+  constructor(
+    @InjectModel(Order.name) private orderModel: Model<OrderDocument>,
+    @InjectModel(Reservation.name) private reservationModel: Model<ReservationDocument>,
+  ) {}
 
-class OrderService {
-  async createOrder({
-    customer,
-    staff = null,
-    items,
-    payment = null,
-    orderType = "Takeaway",
-    reservation = null,
-    table = null,
-  }: CreateOrderInput): Promise<Document> {
+  async createOrder(data: CreateOrderDto): Promise<OrderDocument> {
     let totalAmount = 0;
 
-    const processedItems = items.map(item => {
+    const processedItems = data.items.map(item => {
       const subTotal = item.price * item.quantity;
       totalAmount += subTotal;
       return { ...item, subTotal };
     });
 
-    // Prepare order payload
-    const orderPayload: any = {
-      customer,
-      staff,
+    const order = new this.orderModel({
+      orderNumber: await this.generateOrderNumber(),
+      customer: data.customer,
+      staff: data.staff,
       items: processedItems,
       totalAmount,
-      payment,
-      orderType,
-      reservation: null,
-      table: null,
-    };
-
-    // If dine-in and reservation provided -> validate and attach reservation.table
-    if (orderType === "DineIn") {
-      if (reservation) {
-        const resv = await Reservation.findById(reservation).populate("table");
-        if (!resv) throw new Error("RESERVATION_NOT_FOUND");
-        orderPayload.reservation = resv._id;
-        orderPayload.table = resv.table ?? null;
-      } else if (table) {
-        // Walk-in: validate table exists (you may also check availability if needed)
-        const tableDoc = await TableService.getTable(table.toString());
-        if (!tableDoc) throw new Error("TABLE_NOT_FOUND");
-        orderPayload.table = tableDoc._id;
-      } else {
-        throw new Error("DINEIN_REQUIRES_RESERVATION_OR_TABLE");
-      }
-    }
-
-    // For Takeaway/Delivery we ignore reservation/table (if passed, you may attach but not required)
-
-    const order = new Order(orderPayload);
+      orderType: data.orderType,
+      reservation: data.reservation,
+      table: data.table,
+      specialInstructions: data.specialInstructions,
+      createdBy: data.createdBy,
+    });
 
     return order.save();
   }
 
-  async getAllOrders(): Promise<Document[]> {
-    return Order.find()
-      .populate("customer", "name")
-      .populate("staff", "name")
-      .populate("items.menuItem", "name price")
-      .populate("reservation")
-     .populate("table")
-      .populate("payment");
+  async getOrderById(orderId: string): Promise<OrderDocument> {
+    const order = await this.orderModel.findById(orderId)
+      .populate('customer', 'name email phone')
+      .populate('staff', 'name')
+      .populate('items.menuItem', 'name price')
+      .populate('reservation')
+      .populate('table', 'tableNumber capacity');
+    if (!order) {
+      throw new Error('ORDER_NOT_FOUND');
+    }
+    return order;
   }
 
-  async getOrderById(orderId: string): Promise<Document | null> {
-    return Order.findById(orderId)
-      .populate("customer", "name")
-      .populate("staff", "name")
-      .populate("items.menuItem", "name price")
-      .populate("reservation")
-      .populate("table")
-      .populate("payment");
+  async getOrdersByCustomer(customerId: string): Promise<OrderDocument[]> {
+    return this.orderModel.find({ customer: customerId })
+      .populate('customer', 'name email phone')
+      .populate('staff', 'name')
+      .populate('items.menuItem', 'name price')
+      .populate('reservation')
+      .populate('table', 'tableNumber capacity')
+      .sort({ createdAt: -1 });
   }
 
-  async updateOrderStatus(
-    orderId: string,
-    status: "Pending" | "Preparing" | "Served" | "Completed"
-  ): Promise<Document | null> {
-    return Order.findByIdAndUpdate(orderId, { status }, { new: true })
-      .populate("customer", "name")
-      .populate("staff", "name")
-      .populate("items.menuItem", "name price")
-      .populate("reservation")
-      .populate("table")
-      .populate("payment");
+  async updateOrder(orderId: string, data: UpdateOrderDto): Promise<OrderDocument> {
+    const updateData: any = {};
+    if (data.status) updateData.status = data.status;
+    if (data.specialInstructions) updateData.specialInstructions = data.specialInstructions;
+    if (data.staff) updateData.staff = data.staff;
+
+    const order = await this.orderModel.findByIdAndUpdate(orderId, updateData, { new: true });
+    if (!order) {
+      throw new Error('ORDER_NOT_FOUND');
+    }
+    return order;
   }
 
-  async deleteOrder(orderId: string): Promise<Document | null> {
-    return Order.findByIdAndDelete(orderId)
-      .populate("customer", "name")
-      .populate("staff", "name")
-      .populate("items.menuItem", "name price")
-      .populate("reservation")
-      .populate("table")
-      .populate("payment");
+  async deleteOrder(orderId: string): Promise<void> {
+    const order = await this.orderModel.findByIdAndDelete(orderId);
+    if (!order) {
+      throw new Error('ORDER_NOT_FOUND');
+    }
   }
 
-  async linkPayment(
-    orderId: string,
-    paymentId: Types.ObjectId | string
-  ): Promise<Document | null> {
-    return Order.findByIdAndUpdate(orderId, { payment: paymentId }, { new: true })
-      .populate("customer", "name")
-      .populate("staff", "name")
-      .populate("items.menuItem", "name price")
-      .populate("reservation")
-     .populate("table")
-      .populate("payment");
+  async getAllOrders(): Promise<OrderDocument[]> {
+    return this.orderModel.find()
+      .populate('customer', 'name email phone')
+      .populate('staff', 'name')
+      .populate('items.menuItem', 'name price')
+      .populate('reservation')
+      .populate('table', 'tableNumber capacity')
+      .sort({ createdAt: -1 });
+  }
+
+  async getOrdersByStatus(status: string): Promise<OrderDocument[]> {
+    return this.orderModel.find({ status })
+      .populate('customer', 'name email phone')
+      .populate('staff', 'name')
+      .populate('items.menuItem', 'name price')
+      .sort({ createdAt: -1 });
+  }
+
+  private async generateOrderNumber(): Promise<string> {
+    const count = await this.orderModel.countDocuments();
+    const timestamp = Date.now();
+    return `ORD-${timestamp}-${String(count + 1).padStart(4, '0')}`;
   }
 }
-
-export default new OrderService();
