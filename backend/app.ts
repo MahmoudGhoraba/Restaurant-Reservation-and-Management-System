@@ -19,7 +19,7 @@ app.get("/", (req: Request, res: Response) => {
   res.send("MongoDB connection test!");
 });
 
-const PORT: number = parseInt(process.env.PORT || "5000", 10);
+const PORT: number = parseInt(process.env.PORT || "3000", 10);
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
