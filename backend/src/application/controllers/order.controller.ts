@@ -7,13 +7,14 @@ class OrderController {
   // Create a new order
   createOrder = catchAsync(
     async (req: Request, res: Response, next: NextFunction) => {
-      const { items, payment, orderType, reservation, table } = req.body;
+      const {id, items, payment, orderType, reservation, table } = req.body;
 
       if (!items || !Array.isArray(items) || items.length === 0) {
         return next(new AppError("Order must contain at least one item.", 400));
       }
 
-      if (!req.user?.id) {
+      const customerId = id;
+      if (!customerId) {
         return next(new AppError("User not authenticated.", 401));
       }
 
@@ -24,7 +25,7 @@ class OrderController {
       }
 
       const order = await OrderService.createOrder({
-        customer: req.user.id,
+        customer: customerId,
         items,
         payment: payment || null,
         orderType: orderType || "Takeaway",

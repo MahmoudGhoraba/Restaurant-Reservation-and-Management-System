@@ -1,10 +1,12 @@
 import express, { Router } from "express"
 import MenuItemController from "../controllers/menuitem.controller"
-
+import authenticateMiddleware from "../../middlewares/authMiddleware"
+import authorizationMiddleware from "../../middlewares/authorizeMiddleware"
+import allowAdmin from "../../middlewares/allowAdminMiddleware"
 const router: Router = express.Router()
-router.post('/',/*AUTH(ADMIN)*/ MenuItemController.createMenuItem)
-router.get('/:id', MenuItemController.getMenuItem)
-router.patch('/:id',/*AUTH(ADMIN)*/ MenuItemController.updateMenuItem)
-router.delete('/:id',/*AUTH(ADMIN)*/ MenuItemController.deleteMenuItem)
+router.post('/',authenticateMiddleware,authorizationMiddleware('Admin'),allowAdmin('Main Admin'),MenuItemController.createMenuItem)
+router.get('/:id',authenticateMiddleware,authorizationMiddleware("Customer","Admin","Staff"),MenuItemController.getMenuItem)
+router.patch('/:id',authenticateMiddleware,authorizationMiddleware('Admin'),allowAdmin('Main Admin'), MenuItemController.updateMenuItem)
+router.delete('/:id',authenticateMiddleware,authorizationMiddleware('Admin'),allowAdmin('Main Admin'), MenuItemController.deleteMenuItem)
 
 export default router

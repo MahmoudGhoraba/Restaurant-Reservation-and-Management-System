@@ -10,3 +10,5 @@ router.put('/:id', authenticateMiddleware, FeedbackController.updateFeedback);
 router.get('/:id', authenticateMiddleware, FeedbackController.getFeedbackById);
 router.get('/', authenticateMiddleware, authorizationMiddleware('Admin'), FeedbackController.getAllFeedback);
 router.delete('/:id', authenticateMiddleware, authorizationMiddleware('Admin'), FeedbackController.deleteFeedback);
+
+export default router;

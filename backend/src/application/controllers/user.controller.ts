@@ -35,7 +35,7 @@ export const register = async (req: Request, res: Response) => {
       return res.status(400).json({ message: 'Request body is required' });
     }
 
-    const { name, email, password, role, profilePicture, phone, ...otherDetails } = req.body as RegisterRequest;
+    const { name, email, password, role, profilePicture, phone, adminLevel, ...otherDetails } = req.body as RegisterRequest;
 
     if (!name) {
       return res.status(400).json({ message: 'Name is required' });
@@ -50,6 +50,18 @@ export const register = async (req: Request, res: Response) => {
       return res.status(400).json({ message: 'role is required' });
     }
 
+    if (role === 'Admin' && !adminLevel) {
+      return res.status(400).json({ 
+        message: 'Admin level is required for Admin role. Please specify either "Manager Admin" or "Main Admin"' 
+      });
+    }
+
+    if (role === 'Admin' && adminLevel && !['Manager Admin', 'Main Admin'].includes(adminLevel)) {
+      return res.status(400).json({ 
+        message: 'Invalid admin level. Must be either "Manager Admin" or "Main Admin"' 
+      });
+    }
+
     const { user } = await userService.registerUser({
       name,
       email,
@@ -57,6 +69,7 @@ export const register = async (req: Request, res: Response) => {
       role,
       profilePicture,
       phone,
+      adminLevel,
       ...otherDetails
     });
 
@@ -66,7 +79,8 @@ export const register = async (req: Request, res: Response) => {
         _id: user._id,
         name: user.name,
         email: user.email,
-        role: user.role
+        role: user.role,
+        ...(role === 'Admin' && { adminLevel })
       }
     });
 
@@ -81,6 +95,7 @@ export const register = async (req: Request, res: Response) => {
   }
 };
 
+
 export const login = async (req: Request, res: Response) => {
   try {
     
@@ -94,6 +109,19 @@ export const login = async (req: Request, res: Response) => {
 
     const expiresAt = new Date(Date.now() + 1800000); 
 
+    // Build user response object
+    const userResponse: any = {
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role
+    };
+
+    // Add adminLevel if user is Admin
+    if (user.role === 'Admin' && (user as any).adminLevel) {
+      userResponse.adminLevel = (user as any).adminLevel;
+    }
+
     return res
       .cookie("token", token, {
         expires: expiresAt,
@@ -105,12 +133,7 @@ export const login = async (req: Request, res: Response) => {
       .status(200)
       .json({ 
         message: "Login successful", 
-        user: {
-           _id: user._id,
-           name: user.name,
-           email: user.email,
-           role: user.role
-        }, 
+        user: userResponse, 
         token 
       });
 
@@ -194,7 +217,9 @@ export const getUserProfile = async (req:Request,res:Response) => {
     if (!userProfile) {
       return res.status(404).json({ message: 'No profile is found' });
     }
-
+    if(userProfile.role=="Admin"){
+      const adminProfile = await userService.getUserProfile(userId);
+    }
     return res.status(200).json({ user: userProfile });
   } catch (error: any) {
     console.error("Get User Profile Error:", error);

@@ -63,13 +63,6 @@ class PaymentService {
 
         const savedPayment = await newPayment.save();
 
-        // 4. Integration: If linked to an Order and Paid, update the Order(Ghoraba)
-        if (order && status === "Paid") {
-            await Order.findByIdAndUpdate(order, {
-                status: "Completed",
-                payment: savedPayment._id
-            });
-        }
         return savedPayment;
     }
 
