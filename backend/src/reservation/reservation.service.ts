@@ -99,6 +99,26 @@ export class ReservationService {
       return null;
     }
 
+    // Check table availability if table, date, time, or duration is being updated
+    if (updates.table || updates.reservationDate || updates.reservationTime || updates.duration) {
+      const tableToCheck = (updates.table || reservation.table).toString();
+      const dateToCheck = updates.reservationDate || reservation.reservationDate;
+      const timeToCheck = updates.reservationTime || reservation.reservationTime;
+      const durationToCheck = updates.duration || reservation.duration;
+
+      const isAvailable = await this.tableService.checkTableAvailability(
+        tableToCheck,
+        dateToCheck,
+        timeToCheck,
+        durationToCheck,
+        reservationId // Exclude current reservation from availability check
+      );
+
+      if (!isAvailable) {
+        throw new BadRequestException('Table is not available for the requested time slot. Please choose a different time.');
+      }
+    }
+
     if (updates.table) reservation.table = updates.table as Types.ObjectId;
     if (updates.reservationDate) reservation.reservationDate = updates.reservationDate;
     if (updates.reservationTime) reservation.reservationTime = updates.reservationTime;
