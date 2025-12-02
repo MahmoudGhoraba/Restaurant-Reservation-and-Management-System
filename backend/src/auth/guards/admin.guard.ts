@@ -3,14 +3,14 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Reflector } from '@nestjs/core';
 import { ADMIN_LEVELS_KEY } from '../decorators/admin-levels.decorator';
-import { IUser } from '../../models/user.schema';
+import { IUser } from '../../Data/models/user.schema';
 
 @Injectable()
 export class AdminGuard implements CanActivate {
   constructor(
     private reflector: Reflector,
     @InjectModel('User') private userModel: Model<IUser>,
-  ) {}
+  ) { }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();

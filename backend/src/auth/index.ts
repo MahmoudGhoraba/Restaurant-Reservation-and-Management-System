@@ -12,4 +12,4 @@ export * from './decorators/admin-levels.decorator';
 export * from './jwt.strategy';
 
 // Module
-export * from './auth.module';
+export * from '../Application/Modules/auth.module';
