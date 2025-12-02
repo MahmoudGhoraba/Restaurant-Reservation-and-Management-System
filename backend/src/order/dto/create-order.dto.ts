@@ -33,7 +33,7 @@ export class CreateOrderDto {
   @IsNotEmpty()
   paymentType: 'Cash' | 'Card' | 'Online';
 
-  @ValidateIf(o => o.orderType === 'DineIn')
+  @ValidateIf(o => o.orderType === 'DineIn' && !o.reservation)
   @IsNotEmpty({ message: 'Reservation ID is required for DineIn orders' })
   @IsString()
   reservationId?: string;
@@ -46,7 +46,8 @@ export class CreateOrderDto {
   @IsString()
   payment?: string;
 
-  @IsOptional()
+  @ValidateIf(o => o.orderType === 'DineIn' && !o.reservationId)
+  @IsNotEmpty({ message: 'Reservation is required for DineIn orders' })
   @IsString()
   reservation?: string;
 

@@ -23,12 +23,15 @@ export class OrderController {
       throw new BadRequestException("User not authenticated.");
     }
 
+    // Use reservationId or reservation (accept both)
+    const finalReservationId = reservationId || reservation;
+
     const order = await this.orderService.createOrder({
       customer: id,
       items,
       orderType,
       paymentType,
-      reservationId,
+      reservationId: finalReservationId,
       deliveryAddress,
       payment: payment || null,
       reservation: reservation || null,
