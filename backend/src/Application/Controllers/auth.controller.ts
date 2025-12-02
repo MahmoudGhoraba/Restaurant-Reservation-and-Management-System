@@ -9,7 +9,7 @@ import {
   ResetPasswordDto,
   UpdateProfileDto,
   ChangePasswordDto,
-} from './dto';
+} from 'src/auth/dto';
 
 @Controller('auth')
 export class AuthController {

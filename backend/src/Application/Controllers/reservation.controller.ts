@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, NotFoundException, BadRequestException } from '@nestjs/common';
 import { ReservationService } from '../Services/reservation.service';
-import { CreateReservationDto } from '../../reservation/dto/create-reservation.dto';
-import { UpdateReservationDto } from '../../reservation/dto/update-reservation.dto';
+import { CreateReservationDto } from '../../Data/Dto/reservation_dto/create-reservation.dto';
+import { UpdateReservationDto } from '../../Data/Dto/reservation_dto/update-reservation.dto';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
 import { AdminGuard } from '../../auth/guards/admin.guard';

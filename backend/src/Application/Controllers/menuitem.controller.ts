@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Put, Delete, Body, Param, NotFoundException, BadRequestException, UseGuards } from '@nestjs/common';
 import { MenuItemService } from '../Services/menuitem.service';
-import { CreateMenuItemDto } from '../../menuitem/dto/create-menuitem.dto';
-import { UpdateMenuItemDto } from '../../menuitem/dto/update-menuitem.dto';
+import { CreateMenuItemDto } from '../../Data/Dto/menuitem_dto/create-menuitem.dto';
+import { UpdateMenuItemDto } from '../../Data/Dto/menuitem_dto/update-menuitem.dto';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
 import { Roles } from '../../auth/decorators/roles.decorator';

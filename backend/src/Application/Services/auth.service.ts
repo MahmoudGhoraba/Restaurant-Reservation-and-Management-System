@@ -3,15 +3,15 @@ import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import * as bcrypt from 'bcrypt';
-import { IUser } from '../Data/models/user.schema';
+import { IUser } from 'src/Data/models/user.schema';
 import {
   RegisterDto,
   LoginDto,
   ResetPasswordDto,
   UpdateProfileDto,
   ChangePasswordDto,
-} from './dto';
-import { MailService } from '../infrastructure/mail/mail.service';
+} from 'src/auth/dto';
+import { MailService } from 'src/infrastructure/mail/mail.service';
 
 @Injectable()
 export class AuthService {

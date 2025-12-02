@@ -1,8 +1,8 @@
 import { Controller, Get, Post, Put, Delete, Body, Param, NotFoundException, BadRequestException, UseGuards } from '@nestjs/common';
 import { OrderService } from '../Services/order.service';
-import { CreateOrderDto } from '../../order/dto/create-order.dto';
-import { UpdateOrderStatusDto } from '../../order/dto/update-order-status.dto';
-import { LinkPaymentDto } from '../../order/dto/link-payment.dto';
+import { CreateOrderDto } from '../../Data/Dto/order_dto/create-order.dto';
+import { UpdateOrderStatusDto } from '../../Data/Dto/order_dto/update-order-status.dto';
+import { LinkPaymentDto } from '../../Data/Dto/order_dto/link-payment.dto';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
 import { Roles } from '../../auth/decorators/roles.decorator';

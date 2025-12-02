@@ -1,8 +1,8 @@
 import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards, BadRequestException, NotFoundException } from '@nestjs/common';
 import { TableService } from '../Services/table.service';
-import { CreateTableDto } from '../../table/dto/create-table.dto';
-import { UpdateTableDto } from '../../table/dto/update-table.dto';
-import { CheckAvailabilityDto } from '../../table/dto/check-availability.dto';
+import { CreateTableDto } from '../../Data/Dto/table_dtos/create-table.dto';
+import { UpdateTableDto } from '../../Data/Dto/table_dtos/update-table.dto';
+import { CheckAvailabilityDto } from '../../Data/Dto/table_dtos/check-availability.dto';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
 import { Roles } from '../../auth/decorators/roles.decorator';

@@ -1,3 +1,3 @@
-export * from './report.module';
-export * from './report.service';
-export * from '../Application/Controllers/report.controller';
+export * from 'src/Application/Modules/report.module';
+export * from 'src/Application/Services/report.service';
+export * from 'src/Application/Controllers/report.controller';
