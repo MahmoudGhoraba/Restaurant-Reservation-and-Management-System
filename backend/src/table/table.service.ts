@@ -36,18 +36,26 @@ export class TableService {
     tableId: string,
     reservationDate: Date,
     reservationTime: string,
-    duration: number = 60
+    duration: number = 60,
+    excludeReservationId?: string
   ): Promise<boolean> {
     const startOfDay = new Date(reservationDate);
     startOfDay.setHours(0, 0, 0, 0);
     const endOfDay = new Date(reservationDate);
     endOfDay.setHours(23, 59, 59, 999);
 
-    const existingReservations = await this.reservationModel.find({
+    const query: any = {
       table: tableId,
       reservationDate: { $gte: startOfDay, $lte: endOfDay },
       bookingStatus: { $in: ['pending', 'confirmed'] }
-    }).exec();
+    };
+
+    // Exclude the current reservation when updating
+    if (excludeReservationId) {
+      query._id = { $ne: excludeReservationId };
+    }
+
+    const existingReservations = await this.reservationModel.find(query).exec();
 
     const requestedStart = this.timeToMinutes(reservationTime);
     const requestedEnd = requestedStart + duration;
