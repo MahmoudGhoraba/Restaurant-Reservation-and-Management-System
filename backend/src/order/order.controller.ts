@@ -10,7 +10,7 @@ export class OrderController {
 
   @Post()
   async createOrder(@Body() createOrderDto: CreateOrderDto) {
-    const { id, items, payment, orderType, reservation, table } = createOrderDto;
+    const { id, items, orderType, paymentType, reservationId, deliveryAddress, payment, reservation, table } = createOrderDto;
 
     if (!items || !Array.isArray(items) || items.length === 0) {
       throw new BadRequestException("Order must contain at least one item.");
@@ -20,15 +20,14 @@ export class OrderController {
       throw new BadRequestException("User not authenticated.");
     }
 
-    if (orderType === "DineIn" && !reservation && !table) {
-      throw new BadRequestException("For dine-in orders provide reservation id or table id");
-    }
-
     const order = await this.orderService.createOrder({
       customer: id,
       items,
+      orderType,
+      paymentType,
+      reservationId,
+      deliveryAddress,
       payment: payment || null,
-      orderType: orderType || "Takeaway",
       reservation: reservation || null,
       table: table || null,
     });

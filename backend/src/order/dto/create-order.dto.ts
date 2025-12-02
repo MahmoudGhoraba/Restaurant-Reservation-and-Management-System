@@ -1,4 +1,4 @@
-import { IsArray, IsEnum, IsNotEmpty, IsOptional, IsString, ValidateNested } from 'class-validator';
+import { IsArray, IsEnum, IsNotEmpty, IsOptional, IsString, ValidateNested, Min, ValidateIf } from 'class-validator';
 import { Type } from 'class-transformer';
 
 class OrderItemDto {
@@ -7,10 +7,8 @@ class OrderItemDto {
   menuItem: string;
 
   @IsNotEmpty()
+  @Min(1)
   quantity: number;
-
-  @IsNotEmpty()
-  subTotal: number;
 
   @IsOptional()
   @IsString()
@@ -27,13 +25,26 @@ export class CreateOrderDto {
   @Type(() => OrderItemDto)
   items: OrderItemDto[];
 
+  @IsEnum(['Takeaway', 'DineIn', 'Delivery'])
+  @IsNotEmpty()
+  orderType: 'Takeaway' | 'DineIn' | 'Delivery';
+
+  @IsEnum(['Cash', 'Card', 'Online'])
+  @IsNotEmpty()
+  paymentType: 'Cash' | 'Card' | 'Online';
+
+  @ValidateIf(o => o.orderType === 'DineIn')
+  @IsNotEmpty({ message: 'Reservation ID is required for DineIn orders' })
+  @IsString()
+  reservationId?: string;
+
+  @IsOptional()
+  @IsString()
+  deliveryAddress?: string;
+
   @IsOptional()
   @IsString()
   payment?: string;
-
-  @IsEnum(['Takeaway', 'DineIn', 'Delivery'])
-  @IsOptional()
-  orderType?: 'Takeaway' | 'DineIn' | 'Delivery';
 
   @IsOptional()
   @IsString()
