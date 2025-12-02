@@ -6,15 +6,15 @@ class OrderItemDto {
   @IsNotEmpty()
   menuItem: string;
 
-  @IsString()
-  @IsNotEmpty()
-  name: string;
-
   @IsNotEmpty()
   quantity: number;
 
   @IsNotEmpty()
-  price: number;
+  subTotal: number;
+
+  @IsOptional()
+  @IsString()
+  specialInstructions?: string;
 }
 
 export class CreateOrderDto {

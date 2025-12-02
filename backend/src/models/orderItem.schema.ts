@@ -7,15 +7,7 @@ export const OrderItemSchema = new Schema(
       ref: "MenuItem",
       required: true,
     },
-    name: {
-      type: String,
-      required: true,
-    },
     quantity: {
-      type: Number,
-      required: true,
-    },
-    price: {
       type: Number,
       required: true,
     },

@@ -10,9 +10,9 @@ interface CreateOrderInput {
   staff?: Types.ObjectId | string | null;
   items: Array<{
     menuItem: Types.ObjectId | string;
-    name: string;
     quantity: number;
-    price: number;
+    subTotal: number;
+    specialInstructions?: string;
   }>;
   payment?: Types.ObjectId | string | null;
   orderType?: "Takeaway" | "DineIn" | "Delivery";
@@ -40,9 +40,8 @@ export class OrderService {
     let totalAmount = 0;
 
     const processedItems = items.map(item => {
-      const subTotal = item.price * item.quantity;
-      totalAmount += subTotal;
-      return { ...item, subTotal };
+      totalAmount += item.subTotal;
+      return { ...item };
     });
 
     const orderPayload: any = {

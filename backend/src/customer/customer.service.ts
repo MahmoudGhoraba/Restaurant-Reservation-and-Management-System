@@ -36,12 +36,10 @@ export class CustomerService {
       throw new BadRequestException('Reservation ID is required for DineIn orders');
     }
 
-    // Fetch menu items from database to get name and price
+    // Fetch menu items from database to calculate subTotal
     const processedItems: Array<{
       menuItem: Types.ObjectId;
-      name: string;
       quantity: number;
-      price: number;
       subTotal: number;
       specialInstructions?: string;
     }> = [];
@@ -63,9 +61,7 @@ export class CustomerService {
 
       processedItems.push({
         menuItem: new Types.ObjectId(item.menuItem),
-        name: menuItem.name,
         quantity: item.quantity,
-        price: menuItem.price,
         subTotal,
         specialInstructions: item.specialInstructions,
       });
