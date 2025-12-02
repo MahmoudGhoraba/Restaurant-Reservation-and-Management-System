@@ -21,7 +21,7 @@ export class ReservationController {
       throw new BadRequestException('Please provide table, reservationDate, reservationTime, and numberOfGuests');
     }
 
-    const customerId = user.id;
+    const customerId = user.userId;
 
     const reservation = await this.reservationService.createReservation({
       customer: customerId,
@@ -53,7 +53,7 @@ export class ReservationController {
   @Get('my-reservations')
   @UseGuards(JwtAuthGuard)
   async getMyReservations(@CurrentUser() user: any) {
-    const customerId = user.id;
+    const customerId = user.userId;
 
     const reservations = await this.reservationService.getReservationsByCustomer(customerId);
 
@@ -85,7 +85,7 @@ export class ReservationController {
     @Body() updateReservationDto: UpdateReservationDto,
     @CurrentUser() user: any
   ) {
-    const customerId = user.id;
+    const customerId = user.userId;
 
     const updates: any = {};
     if (updateReservationDto.table) updates.table = updateReservationDto.table;
@@ -110,7 +110,7 @@ export class ReservationController {
   @Delete(':id/cancel')
   @UseGuards(JwtAuthGuard)
   async cancelReservation(@Param('id') id: string, @CurrentUser() user: any) {
-    const customerId = user.id;
+    const customerId = user.userId;
     const userRole = user.role;
 
     let reservation;
