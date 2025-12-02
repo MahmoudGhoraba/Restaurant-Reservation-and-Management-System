@@ -37,7 +37,14 @@ export class CustomerService {
     }
 
     // Fetch menu items from database to get name and price
-    const processedItems = [];
+    const processedItems: Array<{
+      menuItem: Types.ObjectId;
+      name: string;
+      quantity: number;
+      price: number;
+      subTotal: number;
+      specialInstructions?: string;
+    }> = [];
     let totalAmount = 0;
 
     for (const item of items) {
