@@ -36,6 +36,18 @@ export class ReservationService {
     duration = 60,
     numberOfGuests,
   }: CreateReservationInput): Promise<IReservation> {
+    // Check if table exists and has enough capacity
+    const tableDoc = await this.tableService.getTable(table.toString());
+    if (!tableDoc) {
+      throw new NotFoundException('Table not found');
+    }
+
+    if (tableDoc.capacity < numberOfGuests) {
+      throw new BadRequestException(
+        `Table capacity is ${tableDoc.capacity}, but you requested for ${numberOfGuests} guests. Please choose a larger table.`
+      );
+    }
+
     const isAvailable = await this.tableService.checkTableAvailability(
       table.toString(),
       reservationDate,
@@ -97,6 +109,21 @@ export class ReservationService {
 
     if (!reservation) {
       return null;
+    }
+
+    // Check table capacity if table or numberOfGuests is being updated
+    const tableToCheck = updates.table || reservation.table;
+    const guestsToCheck = updates.numberOfGuests || reservation.numberOfGuests;
+
+    const tableDoc = await this.tableService.getTable(tableToCheck.toString());
+    if (!tableDoc) {
+      throw new NotFoundException('Table not found');
+    }
+
+    if (tableDoc.capacity < guestsToCheck) {
+      throw new BadRequestException(
+        `Table capacity is ${tableDoc.capacity}, but you requested for ${guestsToCheck} guests. Please choose a larger table.`
+      );
     }
 
     // Check table availability if table, date, time, or duration is being updated
