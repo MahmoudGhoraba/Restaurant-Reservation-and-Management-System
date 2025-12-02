@@ -4,11 +4,9 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 import { Request } from 'express';
 
 interface JwtPayload {
-  user: {
-    id: string;
-    role: string;
-    email?: string;
-  };
+  userId: string;
+  email: string;
+  role: string;
 }
 
 @Injectable()
@@ -16,8 +14,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor() {
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
+        ExtractJwt.fromAuthHeaderAsBearerToken(), // Extract from Authorization header
         (request: Request) => {
-          // Extract JWT from cookie
+          // Also try to extract from cookie as fallback
           return request?.cookies?.token;
         },
       ]),
@@ -29,9 +28,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   async validate(payload: JwtPayload) {
     // This will be attached to request.user
     return {
-      id: payload.user.id,
-      role: payload.user.role,
-      email: payload.user.email,
+      userId: payload.userId,
+      email: payload.email,
+      role: payload.role,
     };
   }
 }

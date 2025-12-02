@@ -1,0 +1,779 @@
+{
+  "info": {
+    "name": "Restaurant API - Part 4: Customer Features",
+    "description": "Test cases for Customer endpoints - browsing, ordering, tracking, feedback",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "customerToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "menuItemId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "orderId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "paymentId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Browse Menu - Simple Cases",
+      "item": [
+        {
+          "name": "Browse Menu - No Auth Required",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Menu items returned', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.status).to.eql('success');",
+                  "    pm.expect(jsonData.data).to.be.an('array');",
+                  "});",
+                  "",
+                  "pm.test('Results count matches data length', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.results).to.eql(jsonData.data.length);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/customers/menu",
+              "host": ["{{baseUrl}}"],
+              "path": ["customers", "menu"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Place Order - Simple to Complex",
+      "item": [
+        {
+          "name": "Place Order - Single Item (Simplest)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('Order placed successfully', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.status).to.eql('success');",
+                  "    pm.expect(jsonData.data).to.have.property('_id');",
+                  "    pm.collectionVariables.set('orderId', jsonData.data._id);",
+                  "});",
+                  "",
+                  "pm.test('Order has correct items', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data.items).to.have.lengthOf(1);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    {\n      \"menuItem\": \"{{menuItemId}}\",\n      \"name\": \"Pizza\",\n      \"quantity\": 1,\n      \"price\": 12.99\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/customers/order",
+              "host": ["{{baseUrl}}"],
+              "path": ["customers", "order"]
+            }
+          }
+        },
+        {
+          "name": "Place Order - Multiple Items",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('All items included', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data.items).to.have.lengthOf(3);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    {\n      \"menuItem\": \"{{menuItemId}}\",\n      \"name\": \"Pizza\",\n      \"quantity\": 2,\n      \"price\": 12.99\n    },\n    {\n      \"menuItem\": \"{{menuItemId}}\",\n      \"name\": \"Burger\",\n      \"quantity\": 1,\n      \"price\": 9.99\n    },\n    {\n      \"menuItem\": \"{{menuItemId}}\",\n      \"name\": \"Salad\",\n      \"quantity\": 1,\n      \"price\": 7.99\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/customers/order",
+              "host": ["{{baseUrl}}"],
+              "path": ["customers", "order"]
+            }
+          }
+        },
+        {
+          "name": "Place Order - With Payment ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('Payment linked to order', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data.payment).to.exist;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    {\n      \"menuItem\": \"{{menuItemId}}\",\n      \"name\": \"Coffee\",\n      \"quantity\": 2,\n      \"price\": 3.99\n    }\n  ],\n  \"paymentId\": \"{{paymentId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/customers/order",
+              "host": ["{{baseUrl}}"],
+              "path": ["customers", "order"]
+            }
+          }
+        },
+        {
+          "name": "Place Order - No Auth (Should Fail)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 401', function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    {\n      \"menuItem\": \"{{menuItemId}}\",\n      \"name\": \"Pizza\",\n      \"quantity\": 1,\n      \"price\": 12.99\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/customers/order",
+              "host": ["{{baseUrl}}"],
+              "path": ["customers", "order"]
+            }
+          }
+        },
+        {
+          "name": "Place Order - Empty Items (Invalid)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 400', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": []\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/customers/order",
+              "host": ["{{baseUrl}}"],
+              "path": ["customers", "order"]
+            }
+          }
+        },
+        {
+          "name": "Place Order - Missing Item Fields",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 400', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    {\n      \"menuItem\": \"{{menuItemId}}\"\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/customers/order",
+              "host": ["{{baseUrl}}"],
+              "path": ["customers", "order"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Track Order",
+      "item": [
+        {
+          "name": "Track Order - Valid ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Order details returned', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.status).to.eql('success');",
+                  "    pm.expect(jsonData.data).to.have.property('_id');",
+                  "    pm.expect(jsonData.data).to.have.property('status');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/customers/order/{{orderId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["customers", "order", "{{orderId}}"]
+            }
+          }
+        },
+        {
+          "name": "Track Order - Invalid ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 404', function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "",
+                  "pm.test('Not found message', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.message).to.include('not found');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/customers/order/507f1f77bcf86cd799439011",
+              "host": ["{{baseUrl}}"],
+              "path": ["customers", "order", "507f1f77bcf86cd799439011"]
+            }
+          }
+        },
+        {
+          "name": "Track Order - No Auth",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 401', function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/customers/order/{{orderId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["customers", "order", "{{orderId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Give Feedback - Simple to Edge Cases",
+      "item": [
+        {
+          "name": "Give Feedback - Valid (Rating 5)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('Feedback submitted successfully', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.status).to.eql('success');",
+                  "    pm.expect(jsonData.data).to.exist;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"referenceId\": \"{{orderId}}\",\n  \"rating\": 5,\n  \"comment\": \"Excellent food and service! Highly recommend.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/customers/feedback",
+              "host": ["{{baseUrl}}"],
+              "path": ["customers", "feedback"]
+            }
+          }
+        },
+        {
+          "name": "Give Feedback - Valid (Rating 1)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"referenceId\": \"{{orderId}}\",\n  \"rating\": 1,\n  \"comment\": \"Not satisfied with the service.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/customers/feedback",
+              "host": ["{{baseUrl}}"],
+              "path": ["customers", "feedback"]
+            }
+          }
+        },
+        {
+          "name": "Give Feedback - Invalid Rating (0)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 400', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"referenceId\": \"{{orderId}}\",\n  \"rating\": 0,\n  \"comment\": \"Invalid rating test\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/customers/feedback",
+              "host": ["{{baseUrl}}"],
+              "path": ["customers", "feedback"]
+            }
+          }
+        },
+        {
+          "name": "Give Feedback - Invalid Rating (6)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 400', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"referenceId\": \"{{orderId}}\",\n  \"rating\": 6,\n  \"comment\": \"Too high rating\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/customers/feedback",
+              "host": ["{{baseUrl}}"],
+              "path": ["customers", "feedback"]
+            }
+          }
+        },
+        {
+          "name": "Give Feedback - Missing Required Fields",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 400', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rating\": 4\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/customers/feedback",
+              "host": ["{{baseUrl}}"],
+              "path": ["customers", "feedback"]
+            }
+          }
+        },
+        {
+          "name": "Give Feedback - No Auth",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 401', function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"referenceId\": \"{{orderId}}\",\n  \"rating\": 4,\n  \"comment\": \"Good experience\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/customers/feedback",
+              "host": ["{{baseUrl}}"],
+              "path": ["customers", "feedback"]
+            }
+          }
+        },
+        {
+          "name": "Give Feedback - Long Comment",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"referenceId\": \"{{orderId}}\",\n  \"rating\": 4,\n  \"comment\": \"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/customers/feedback",
+              "host": ["{{baseUrl}}"],
+              "path": ["customers", "feedback"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

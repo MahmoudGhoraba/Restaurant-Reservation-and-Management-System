@@ -1,0 +1,1314 @@
+{
+  "info": {
+    "name": "Restaurant API - Part 6: Error Handling & Security",
+    "description": "Advanced error handling, security tests, and malicious input scenarios",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "adminToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "customerToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "invalidToken",
+      "value": "invalid.jwt.token",
+      "type": "string"
+    },
+    {
+      "key": "menuItemId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "orderId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Authentication & Authorization Errors",
+      "item": [
+        {
+          "name": "Access Admin Endpoint - No Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 401 Unauthorized', function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test Item\",\n  \"description\": \"Test\",\n  \"price\": 10,\n  \"availability\": true,\n  \"category\": \"Test\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/menuitems",
+              "host": ["{{baseUrl}}"],
+              "path": ["menuitems"]
+            }
+          }
+        },
+        {
+          "name": "Access Admin Endpoint - Invalid Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 401', function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{invalidToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test Item\",\n  \"description\": \"Test\",\n  \"price\": 10,\n  \"availability\": true,\n  \"category\": \"Test\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/menuitems",
+              "host": ["{{baseUrl}}"],
+              "path": ["menuitems"]
+            }
+          }
+        },
+        {
+          "name": "Access Admin Endpoint - Customer Token (Wrong Role)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 403 Forbidden', function () {",
+                  "    pm.response.to.have.status(403);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test Item\",\n  \"description\": \"Test\",\n  \"price\": 10,\n  \"availability\": true,\n  \"category\": \"Test\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/menuitems",
+              "host": ["{{baseUrl}}"],
+              "path": ["menuitems"]
+            }
+          }
+        },
+        {
+          "name": "Delete Menu Item - Customer Token (Unauthorized)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 403', function () {",
+                  "    pm.response.to.have.status(403);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/menuitems/{{menuItemId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["menuitems", "{{menuItemId}}"]
+            }
+          }
+        },
+        {
+          "name": "Confirm Reservation - Customer Token (Admin Only)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 403', function () {",
+                  "    pm.response.to.have.status(403);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/reservations/507f1f77bcf86cd799439011/confirm",
+              "host": ["{{baseUrl}}"],
+              "path": ["reservations", "507f1f77bcf86cd799439011", "confirm"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Malformed Request Body",
+      "item": [
+        {
+          "name": "Create Menu Item - Invalid JSON",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 400', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test\",\n  \"price\": invalid,\n  \"availability\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/menuitems",
+              "host": ["{{baseUrl}}"],
+              "path": ["menuitems"]
+            }
+          }
+        },
+        {
+          "name": "Create Order - Wrong Data Types",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 400', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"123\",\n  \"items\": \"not-an-array\",\n  \"orderType\": \"Takeaway\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/orders",
+              "host": ["{{baseUrl}}"],
+              "path": ["orders"]
+            }
+          }
+        },
+        {
+          "name": "Create Reservation - Boolean as String",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 400', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"table\": \"123\",\n  \"reservationDate\": \"2025-12-20\",\n  \"reservationTime\": \"18:00\",\n  \"numberOfGuests\": \"four\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/reservations",
+              "host": ["{{baseUrl}}"],
+              "path": ["reservations"]
+            }
+          }
+        },
+        {
+          "name": "Give Feedback - String as Number",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 400', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"referenceId\": \"123\",\n  \"rating\": \"five\",\n  \"comment\": \"Good\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/customers/feedback",
+              "host": ["{{baseUrl}}"],
+              "path": ["customers", "feedback"]
+            }
+          }
+        },
+        {
+          "name": "Create Menu Item - Null Values",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 400', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": null,\n  \"description\": \"Test\",\n  \"price\": 10,\n  \"availability\": true,\n  \"category\": \"Test\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/menuitems",
+              "host": ["{{baseUrl}}"],
+              "path": ["menuitems"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Injection & XSS Attempts",
+      "item": [
+        {
+          "name": "Create Menu Item - SQL Injection Attempt",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Request handled safely', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([201, 400]);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 201) {",
+                  "    pm.test('SQL injection not executed', function () {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData.data.name).to.include(\"' OR '1'='1\");",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Pizza' OR '1'='1\",\n  \"description\": \"Test'; DROP TABLE users;--\",\n  \"price\": 10,\n  \"availability\": true,\n  \"category\": \"Test\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/menuitems",
+              "host": ["{{baseUrl}}"],
+              "path": ["menuitems"]
+            }
+          }
+        },
+        {
+          "name": "Give Feedback - XSS Script Injection",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Request handled', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([201, 400]);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 201) {",
+                  "    pm.test('Script not executed, stored as text', function () {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData.data.comment).to.include('<script>');",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"referenceId\": \"{{orderId}}\",\n  \"rating\": 5,\n  \"comment\": \"<script>alert('XSS')</script> Great food!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/customers/feedback",
+              "host": ["{{baseUrl}}"],
+              "path": ["customers", "feedback"]
+            }
+          }
+        },
+        {
+          "name": "Create Order - NoSQL Injection Attempt",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Request handled safely', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([201, 400]);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": {\"$ne\": null},\n  \"items\": [\n    {\n      \"menuItem\": \"{{menuItemId}}\",\n      \"name\": \"Pizza\",\n      \"quantity\": 1,\n      \"price\": 12.99\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/orders",
+              "host": ["{{baseUrl}}"],
+              "path": ["orders"]
+            }
+          }
+        },
+        {
+          "name": "Create Menu Item - HTML Injection",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('HTML stored as plain text', function () {",
+                  "    if (pm.response.code === 201) {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData.data.description).to.include('<h1>');",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"<h1>Hacked</h1>\",\n  \"description\": \"<img src=x onerror=alert('XSS')>\",\n  \"price\": 10,\n  \"availability\": true,\n  \"category\": \"Test\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/menuitems",
+              "host": ["{{baseUrl}}"],
+              "path": ["menuitems"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Extreme & Boundary Values",
+      "item": [
+        {
+          "name": "Create Menu Item - Extremely Long Name",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Request handled', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([201, 400]);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\n  \"description\": \"Test\",\n  \"price\": 10,\n  \"availability\": true,\n  \"category\": \"Test\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/menuitems",
+              "host": ["{{baseUrl}}"],
+              "path": ["menuitems"]
+            }
+          }
+        },
+        {
+          "name": "Create Menu Item - Extremely High Price",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Request handled', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([201, 400]);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Luxury Item\",\n  \"description\": \"Test\",\n  \"price\": 999999999.99,\n  \"availability\": true,\n  \"category\": \"Test\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/menuitems",
+              "host": ["{{baseUrl}}"],
+              "path": ["menuitems"]
+            }
+          }
+        },
+        {
+          "name": "Create Reservation - Duration Above Max (500 min)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 400 (exceeds max)', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"table\": \"507f1f77bcf86cd799439011\",\n  \"reservationDate\": \"2025-12-20\",\n  \"reservationTime\": \"18:00\",\n  \"numberOfGuests\": 2,\n  \"duration\": 500\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/reservations",
+              "host": ["{{baseUrl}}"],
+              "path": ["reservations"]
+            }
+          }
+        },
+        {
+          "name": "Create Reservation - Duration Below Min (20 min)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 400 (below min)', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"table\": \"507f1f77bcf86cd799439011\",\n  \"reservationDate\": \"2025-12-20\",\n  \"reservationTime\": \"18:00\",\n  \"numberOfGuests\": 2,\n  \"duration\": 20\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/reservations",
+              "host": ["{{baseUrl}}"],
+              "path": ["reservations"]
+            }
+          }
+        },
+        {
+          "name": "Create Reservation - Negative Guests",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 400', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"table\": \"507f1f77bcf86cd799439011\",\n  \"reservationDate\": \"2025-12-20\",\n  \"reservationTime\": \"18:00\",\n  \"numberOfGuests\": -5\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/reservations",
+              "host": ["{{baseUrl}}"],
+              "path": ["reservations"]
+            }
+          }
+        },
+        {
+          "name": "Create Reservation - Extremely Large Guests (1000)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Request handled', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([201, 400]);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"table\": \"507f1f77bcf86cd799439011\",\n  \"reservationDate\": \"2025-12-20\",\n  \"reservationTime\": \"18:00\",\n  \"numberOfGuests\": 1000\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/reservations",
+              "host": ["{{baseUrl}}"],
+              "path": ["reservations"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Special Characters & Unicode",
+      "item": [
+        {
+          "name": "Create Menu Item - Unicode Characters",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Unicode handled correctly', function () {",
+                  "    if (pm.response.code === 201) {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData.data.name).to.include('🍕');",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"🍕 Pizza Margherita 🇮🇹\",\n  \"description\": \"Délicieux pizza avec fromage 奶酪比萨 ピザ\",\n  \"price\": 12.99,\n  \"availability\": true,\n  \"category\": \"International\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/menuitems",
+              "host": ["{{baseUrl}}"],
+              "path": ["menuitems"]
+            }
+          }
+        },
+        {
+          "name": "Give Feedback - Special Characters",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Special characters handled', function () {",
+                  "    if (pm.response.code === 201) {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData.data.comment).to.exist;",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"referenceId\": \"{{orderId}}\",\n  \"rating\": 5,\n  \"comment\": \"Great! @#$%^&*()_+-=[]{}|;:',.<>?/~`\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/customers/feedback",
+              "host": ["{{baseUrl}}"],
+              "path": ["customers", "feedback"]
+            }
+          }
+        },
+        {
+          "name": "Create Menu Item - Newlines and Tabs",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Whitespace characters handled', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([201, 400]);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Item\\nWith\\nNewlines\",\n  \"description\": \"Description\\twith\\ttabs\",\n  \"price\": 10,\n  \"availability\": true,\n  \"category\": \"Test\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/menuitems",
+              "host": ["{{baseUrl}}"],
+              "path": ["menuitems"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. ID Format & Not Found Errors",
+      "item": [
+        {
+          "name": "Get Menu Item - Malformed MongoDB ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 400 or 500', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([400, 500]);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/menuitems/not-a-valid-id",
+              "host": ["{{baseUrl}}"],
+              "path": ["menuitems", "not-a-valid-id"]
+            }
+          }
+        },
+        {
+          "name": "Get Order - Valid Format But Non-existent",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 404', function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/orders/507f1f77bcf86cd799439011",
+              "host": ["{{baseUrl}}"],
+              "path": ["orders", "507f1f77bcf86cd799439011"]
+            }
+          }
+        },
+        {
+          "name": "Delete Reservation - Empty String ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 400 or 404', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([400, 404]);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/reservations/ ",
+              "host": ["{{baseUrl}}"],
+              "path": ["reservations", " "]
+            }
+          }
+        },
+        {
+          "name": "Update Order Status - Null ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Error handled', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([400, 404, 500]);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"Completed\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/orders/null/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["orders", "null", "status"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. Empty & Whitespace Inputs",
+      "item": [
+        {
+          "name": "Create Menu Item - Empty Strings",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 400', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"\",\n  \"description\": \"\",\n  \"price\": 10,\n  \"availability\": true,\n  \"category\": \"\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/menuitems",
+              "host": ["{{baseUrl}}"],
+              "path": ["menuitems"]
+            }
+          }
+        },
+        {
+          "name": "Create Menu Item - Only Whitespace",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 400', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"   \",\n  \"description\": \"   \",\n  \"price\": 10,\n  \"availability\": true,\n  \"category\": \"   \"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/menuitems",
+              "host": ["{{baseUrl}}"],
+              "path": ["menuitems"]
+            }
+          }
+        },
+        {
+          "name": "Give Feedback - Empty Comment",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 400', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"referenceId\": \"{{orderId}}\",\n  \"rating\": 5,\n  \"comment\": \"\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/customers/feedback",
+              "host": ["{{baseUrl}}"],
+              "path": ["customers", "feedback"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

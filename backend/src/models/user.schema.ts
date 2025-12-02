@@ -10,6 +10,8 @@ export interface IUser extends Document {
     temp: number | null;
     expiry: Date | null;
   };
+  resetPasswordOtp?: string | null;
+  resetPasswordExpiry?: Date | null;
   role: 'Customer' | 'Admin' | 'Staff';
   createdAt: Date;
   updatedAt: Date;
@@ -49,6 +51,14 @@ export const userSchema = new Schema(
     otp: {
         temp:{type:Number ,default:null},
         expiry: { type: Date, default: null }
+    },
+    resetPasswordOtp: {
+      type: String,
+      default: null,
+    },
+    resetPasswordExpiry: {
+      type: Date,
+      default: null,
     }
   },
   {

@@ -8,6 +8,8 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { RolesGuard } from './guards/roles.guard';
 import { AdminGuard } from './guards/admin.guard';
 import { UserSchema } from '../models/user.schema';
+import { AuthController } from './auth.controller';
+import { AuthService } from './auth.service';
 
 @Module({
   imports: [
@@ -26,7 +28,8 @@ import { UserSchema } from '../models/user.schema';
       { name: 'User', schema: UserSchema },
     ]),
   ],
-  providers: [JwtStrategy, JwtAuthGuard, RolesGuard, AdminGuard],
-  exports: [JwtStrategy, JwtAuthGuard, RolesGuard, AdminGuard, JwtModule, PassportModule],
+  controllers: [AuthController],
+  providers: [AuthService, JwtStrategy, JwtAuthGuard, RolesGuard, AdminGuard],
+  exports: [AuthService, JwtStrategy, JwtAuthGuard, RolesGuard, AdminGuard, JwtModule, PassportModule],
 })
 export class AuthModule {}

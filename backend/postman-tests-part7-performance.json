@@ -1,0 +1,1098 @@
+{
+  "info": {
+    "name": "Restaurant API - Part 7: Performance & Concurrent Operations",
+    "description": "Performance testing, concurrent requests, and stress scenarios",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "adminToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "customerToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "menuItemId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "tableId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Rapid Sequential Requests",
+      "description": "Test system behavior with rapid sequential API calls",
+      "item": [
+        {
+          "name": "Rapid Get Menu - Call 1",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Response time under 1000ms', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
+                  "});",
+                  "",
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/customers/menu",
+              "host": ["{{baseUrl}}"],
+              "path": ["customers", "menu"]
+            }
+          }
+        },
+        {
+          "name": "Rapid Get Menu - Call 2",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/customers/menu",
+              "host": ["{{baseUrl}}"],
+              "path": ["customers", "menu"]
+            }
+          }
+        },
+        {
+          "name": "Rapid Get Menu - Call 3",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/customers/menu",
+              "host": ["{{baseUrl}}"],
+              "path": ["customers", "menu"]
+            }
+          }
+        },
+        {
+          "name": "Rapid Get Menu - Call 4",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/customers/menu",
+              "host": ["{{baseUrl}}"],
+              "path": ["customers", "menu"]
+            }
+          }
+        },
+        {
+          "name": "Rapid Get Menu - Call 5",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/customers/menu",
+              "host": ["{{baseUrl}}"],
+              "path": ["customers", "menu"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Bulk Creation Operations",
+      "description": "Create multiple resources in sequence",
+      "item": [
+        {
+          "name": "Create Menu Item 1",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Item created successfully', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Performance Test Item 1\",\n  \"description\": \"Created for performance testing\",\n  \"price\": 10.99,\n  \"availability\": true,\n  \"category\": \"Test\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/menuitems",
+              "host": ["{{baseUrl}}"],
+              "path": ["menuitems"]
+            }
+          }
+        },
+        {
+          "name": "Create Menu Item 2",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Performance Test Item 2\",\n  \"description\": \"Created for performance testing\",\n  \"price\": 15.99,\n  \"availability\": true,\n  \"category\": \"Test\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/menuitems",
+              "host": ["{{baseUrl}}"],
+              "path": ["menuitems"]
+            }
+          }
+        },
+        {
+          "name": "Create Menu Item 3",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Performance Test Item 3\",\n  \"description\": \"Created for performance testing\",\n  \"price\": 20.99,\n  \"availability\": true,\n  \"category\": \"Test\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/menuitems",
+              "host": ["{{baseUrl}}"],
+              "path": ["menuitems"]
+            }
+          }
+        },
+        {
+          "name": "Create Menu Item 4",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Performance Test Item 4\",\n  \"description\": \"Created for performance testing\",\n  \"price\": 8.99,\n  \"availability\": true,\n  \"category\": \"Test\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/menuitems",
+              "host": ["{{baseUrl}}"],
+              "path": ["menuitems"]
+            }
+          }
+        },
+        {
+          "name": "Create Menu Item 5",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Performance Test Item 5\",\n  \"description\": \"Created for performance testing\",\n  \"price\": 25.99,\n  \"availability\": true,\n  \"category\": \"Test\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/menuitems",
+              "host": ["{{baseUrl}}"],
+              "path": ["menuitems"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Multiple Reservations Same Table",
+      "description": "Test concurrent reservation attempts for same table",
+      "item": [
+        {
+          "name": "Reservation Attempt 1 - Time 18:00",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Reservation created', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"table\": \"{{tableId}}\",\n  \"reservationDate\": \"2025-12-30\",\n  \"reservationTime\": \"18:00\",\n  \"numberOfGuests\": 2,\n  \"duration\": 60\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/reservations",
+              "host": ["{{baseUrl}}"],
+              "path": ["reservations"]
+            }
+          }
+        },
+        {
+          "name": "Reservation Attempt 2 - Time 18:30 (Overlap)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Request processed', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([201, 400, 409]);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"table\": \"{{tableId}}\",\n  \"reservationDate\": \"2025-12-30\",\n  \"reservationTime\": \"18:30\",\n  \"numberOfGuests\": 4,\n  \"duration\": 90\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/reservations",
+              "host": ["{{baseUrl}}"],
+              "path": ["reservations"]
+            }
+          }
+        },
+        {
+          "name": "Reservation Attempt 3 - Time 19:30 (No Overlap)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Reservation should succeed', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"table\": \"{{tableId}}\",\n  \"reservationDate\": \"2025-12-30\",\n  \"reservationTime\": \"19:30\",\n  \"numberOfGuests\": 2,\n  \"duration\": 60\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/reservations",
+              "host": ["{{baseUrl}}"],
+              "path": ["reservations"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Rapid Order Creation",
+      "description": "Multiple orders created quickly",
+      "item": [
+        {
+          "name": "Create Order 1",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Order created', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    {\n      \"menuItem\": \"{{menuItemId}}\",\n      \"name\": \"Pizza\",\n      \"quantity\": 1,\n      \"price\": 12.99\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/customers/order",
+              "host": ["{{baseUrl}}"],
+              "path": ["customers", "order"]
+            }
+          }
+        },
+        {
+          "name": "Create Order 2",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    {\n      \"menuItem\": \"{{menuItemId}}\",\n      \"name\": \"Burger\",\n      \"quantity\": 2,\n      \"price\": 9.99\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/customers/order",
+              "host": ["{{baseUrl}}"],
+              "path": ["customers", "order"]
+            }
+          }
+        },
+        {
+          "name": "Create Order 3",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    {\n      \"menuItem\": \"{{menuItemId}}\",\n      \"name\": \"Salad\",\n      \"quantity\": 1,\n      \"price\": 7.99\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/customers/order",
+              "host": ["{{baseUrl}}"],
+              "path": ["customers", "order"]
+            }
+          }
+        },
+        {
+          "name": "Create Order 4",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    {\n      \"menuItem\": \"{{menuItemId}}\",\n      \"name\": \"Pasta\",\n      \"quantity\": 3,\n      \"price\": 15.99\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/customers/order",
+              "host": ["{{baseUrl}}"],
+              "path": ["customers", "order"]
+            }
+          }
+        },
+        {
+          "name": "Create Order 5",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    {\n      \"menuItem\": \"{{menuItemId}}\",\n      \"name\": \"Dessert\",\n      \"quantity\": 2,\n      \"price\": 6.99\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/customers/order",
+              "host": ["{{baseUrl}}"],
+              "path": ["customers", "order"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Read-Heavy Load Test",
+      "description": "Simulate heavy read operations",
+      "item": [
+        {
+          "name": "Get All Menu Items - Read 1",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Fast response', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/menuitems",
+              "host": ["{{baseUrl}}"],
+              "path": ["menuitems"]
+            }
+          }
+        },
+        {
+          "name": "Get All Orders - Read 2",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/orders",
+              "host": ["{{baseUrl}}"],
+              "path": ["orders"]
+            }
+          }
+        },
+        {
+          "name": "Get All Reservations - Read 3",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/reservations",
+              "host": ["{{baseUrl}}"],
+              "path": ["reservations"]
+            }
+          }
+        },
+        {
+          "name": "Browse Menu - Read 4",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/customers/menu",
+              "host": ["{{baseUrl}}"],
+              "path": ["customers", "menu"]
+            }
+          }
+        },
+        {
+          "name": "Get All Menu Items - Read 5",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/menuitems",
+              "host": ["{{baseUrl}}"],
+              "path": ["menuitems"]
+            }
+          }
+        },
+        {
+          "name": "Get All Orders - Read 6",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/orders",
+              "host": ["{{baseUrl}}"],
+              "path": ["orders"]
+            }
+          }
+        },
+        {
+          "name": "Get All Reservations - Read 7",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/reservations",
+              "host": ["{{baseUrl}}"],
+              "path": ["reservations"]
+            }
+          }
+        },
+        {
+          "name": "Browse Menu - Read 8",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/customers/menu",
+              "host": ["{{baseUrl}}"],
+              "path": ["customers", "menu"]
+            }
+          }
+        },
+        {
+          "name": "Get All Menu Items - Read 9",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/menuitems",
+              "host": ["{{baseUrl}}"],
+              "path": ["menuitems"]
+            }
+          }
+        },
+        {
+          "name": "Browse Menu - Read 10",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/customers/menu",
+              "host": ["{{baseUrl}}"],
+              "path": ["customers", "menu"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Mixed Operations Stress Test",
+      "description": "Combination of reads, writes, and updates",
+      "item": [
+        {
+          "name": "Step 1: Read Menu",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/menuitems",
+              "host": ["{{baseUrl}}"],
+              "path": ["menuitems"]
+            }
+          }
+        },
+        {
+          "name": "Step 2: Create Menu Item",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Stress Test Item\",\n  \"description\": \"Testing concurrent operations\",\n  \"price\": 19.99,\n  \"availability\": true,\n  \"category\": \"Test\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/menuitems",
+              "host": ["{{baseUrl}}"],
+              "path": ["menuitems"]
+            }
+          }
+        },
+        {
+          "name": "Step 3: Read Menu Again",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/menuitems",
+              "host": ["{{baseUrl}}"],
+              "path": ["menuitems"]
+            }
+          }
+        },
+        {
+          "name": "Step 4: Create Reservation",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"table\": \"{{tableId}}\",\n  \"reservationDate\": \"2025-12-31\",\n  \"reservationTime\": \"20:00\",\n  \"numberOfGuests\": 4\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/reservations",
+              "host": ["{{baseUrl}}"],
+              "path": ["reservations"]
+            }
+          }
+        },
+        {
+          "name": "Step 5: Place Order",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    {\n      \"menuItem\": \"{{menuItemId}}\",\n      \"name\": \"Mixed Test Item\",\n      \"quantity\": 5,\n      \"price\": 12.99\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/customers/order",
+              "host": ["{{baseUrl}}"],
+              "path": ["customers", "order"]
+            }
+          }
+        },
+        {
+          "name": "Step 6: Read All Orders",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/orders",
+              "host": ["{{baseUrl}}"],
+              "path": ["orders"]
+            }
+          }
+        },
+        {
+          "name": "Step 7: Read All Reservations",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/reservations",
+              "host": ["{{baseUrl}}"],
+              "path": ["reservations"]
+            }
+          }
+        },
+        {
+          "name": "Step 8: Update Menu Item",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"price\": 22.99\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/menuitems/{{menuItemId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["menuitems", "{{menuItemId}}"]
+            }
+          }
+        },
+        {
+          "name": "Step 9: Browse Menu",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/customers/menu",
+              "host": ["{{baseUrl}}"],
+              "path": ["customers", "menu"]
+            }
+          }
+        },
+        {
+          "name": "Step 10: Final Read All",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/menuitems",
+              "host": ["{{baseUrl}}"],
+              "path": ["menuitems"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. Response Time Benchmarks",
+      "description": "Measure and validate response times",
+      "item": [
+        {
+          "name": "Benchmark: Get Single Menu Item",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Response time < 200ms', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(200);",
+                  "});",
+                  "",
+                  "console.log('Response time: ' + pm.response.responseTime + 'ms');"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/menuitems/{{menuItemId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["menuitems", "{{menuItemId}}"]
+            }
+          }
+        },
+        {
+          "name": "Benchmark: Get All Menu Items",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Response time < 500ms', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});",
+                  "",
+                  "console.log('Response time: ' + pm.response.responseTime + 'ms');"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/menuitems",
+              "host": ["{{baseUrl}}"],
+              "path": ["menuitems"]
+            }
+          }
+        },
+        {
+          "name": "Benchmark: Create Order",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Response time < 1000ms', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
+                  "});",
+                  "",
+                  "console.log('Response time: ' + pm.response.responseTime + 'ms');"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    {\n      \"menuItem\": \"{{menuItemId}}\",\n      \"name\": \"Benchmark Item\",\n      \"quantity\": 1,\n      \"price\": 10.99\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/customers/order",
+              "host": ["{{baseUrl}}"],
+              "path": ["customers", "order"]
+            }
+          }
+        },
+        {
+          "name": "Benchmark: Create Reservation",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Response time < 800ms', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(800);",
+                  "});",
+                  "",
+                  "console.log('Response time: ' + pm.response.responseTime + 'ms');"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"table\": \"{{tableId}}\",\n  \"reservationDate\": \"2026-01-01\",\n  \"reservationTime\": \"12:00\",\n  \"numberOfGuests\": 2\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/reservations",
+              "host": ["{{baseUrl}}"],
+              "path": ["reservations"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

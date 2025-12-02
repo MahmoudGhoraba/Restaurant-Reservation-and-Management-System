@@ -5,6 +5,7 @@ import { CustomerService } from './customer.service';
 import { MenuItemSchema } from '../models/menuitem.schema';
 import { OrderSchema } from '../models/order.schema';
 import { FeedbackSchema } from '../models/feedback.schema';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { FeedbackSchema } from '../models/feedback.schema';
       { name: 'Order', schema: OrderSchema },
       { name: 'Feedback', schema: FeedbackSchema },
     ]),
+    AuthModule,
   ],
   controllers: [CustomerController],
   providers: [CustomerService],
