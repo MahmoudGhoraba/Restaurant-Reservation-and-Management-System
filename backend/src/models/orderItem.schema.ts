@@ -23,6 +23,10 @@ export const OrderItemSchema = new Schema(
       type: Number,
       required: true,
     },
+    specialInstructions: {
+      type: String,
+      default: null,
+    },
   },
   {
     _id: false, // Embedded item, not a standalone document

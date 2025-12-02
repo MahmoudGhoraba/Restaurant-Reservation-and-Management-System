@@ -87,7 +87,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"id\": \"{{customerId}}\",\n  \"items\": [\n    {\n      \"menuItem\": \"{{menuItemId1}}\",\n      \"name\": \"Pizza\",\n      \"quantity\": 2,\n      \"price\": 12.99\n    }\n  ],\n  \"orderType\": \"Takeaway\"\n}"
+              "raw": "{\n  \"id\": \"{{customerId}}\",\n  \"items\": [\n    {\n      \"menuItem\": \"{{menuItemId1}}\",\n      \"quantity\": 2\n    }\n  ],\n  \"orderType\": \"Takeaway\",\n  \"paymentType\": \"Cash\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/orders",
@@ -192,7 +192,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"id\": \"{{customerId}}\",\n  \"items\": [\n    {\n      \"menuItem\": \"{{menuItemId1}}\",\n      \"name\": \"Burger\",\n      \"quantity\": 1,\n      \"price\": 9.99\n    },\n    {\n      \"menuItem\": \"{{menuItemId2}}\",\n      \"name\": \"Fries\",\n      \"quantity\": 2,\n      \"price\": 3.99\n    }\n  ],\n  \"orderType\": \"Delivery\"\n}"
+              "raw": "{\n  \"id\": \"{{customerId}}\",\n  \"items\": [\n    {\n      \"menuItem\": \"{{menuItemId1}}\",\n      \"quantity\": 1\n    },\n    {\n      \"menuItem\": \"{{menuItemId2}}\",\n      \"quantity\": 2\n    }\n  ],\n  \"orderType\": \"Delivery\",\n  \"paymentType\": \"Card\",\n  \"deliveryAddress\": \"123 Main St, Apt 4B, New York, NY 10001\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/orders",
@@ -201,46 +201,7 @@
             }
           }
         },
-        {
-          "name": "Create Order - DineIn with Table",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Status code is 201', function () {",
-                  "    pm.response.to.have.status(201);",
-                  "});",
-                  "",
-                  "pm.test('Order type is DineIn with table', function () {",
-                  "    var jsonData = pm.response.json();",
-                  "    pm.expect(jsonData.data.orderType).to.eql('DineIn');",
-                  "    pm.expect(jsonData.data.table).to.exist;",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"id\": \"{{customerId}}\",\n  \"items\": [\n    {\n      \"menuItem\": \"{{menuItemId1}}\",\n      \"name\": \"Steak\",\n      \"quantity\": 1,\n      \"price\": 24.99\n    }\n  ],\n  \"orderType\": \"DineIn\",\n  \"table\": \"{{tableId}}\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/orders",
-              "host": ["{{baseUrl}}"],
-              "path": ["orders"]
-            }
-          }
-        },
+
         {
           "name": "Create Order - DineIn with Reservation",
           "event": [
@@ -310,7 +271,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"id\": \"{{customerId}}\",\n  \"items\": [\n    {\n      \"menuItem\": \"{{menuItemId1}}\",\n      \"name\": \"Salad\",\n      \"quantity\": 1,\n      \"price\": 7.99\n    }\n  ],\n  \"payment\": \"{{paymentId}}\",\n  \"orderType\": \"Takeaway\"\n}"
+              "raw": "{\n  \"id\": \"{{customerId}}\",\n  \"items\": [\n    {\n      \"menuItem\": \"{{menuItemId1}}\",\n      \"quantity\": 1\n    }\n  ],\n  \"orderType\": \"Takeaway\",\n  \"paymentType\": \"Online\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/orders",
@@ -432,7 +393,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"id\": \"{{customerId}}\",\n  \"items\": [\n    {\n      \"menuItem\": \"{{menuItemId1}}\",\n      \"name\": \"Pizza\",\n      \"quantity\": 1,\n      \"price\": 12.99\n    }\n  ],\n  \"orderType\": \"DineIn\"\n}"
+              "raw": "{\n  \"id\": \"{{customerId}}\",\n  \"items\": [\n    {\n      \"menuItem\": \"{{menuItemId1}}\",\n      \"quantity\": 1\n    }\n  ],\n  \"orderType\": \"DineIn\",\n  \"paymentType\": \"Cash\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/orders",
@@ -471,7 +432,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"id\": \"{{customerId}}\",\n  \"items\": [\n    {\n      \"menuItem\": \"{{menuItemId1}}\",\n      \"name\": \"Coffee\",\n      \"quantity\": 100,\n      \"price\": 2.99\n    }\n  ],\n  \"orderType\": \"Takeaway\"\n}"
+              "raw": "{\n  \"id\": \"{{customerId}}\",\n  \"items\": [\n    {\n      \"menuItem\": \"{{menuItemId1}}\",\n      \"quantity\": 100\n    }\n  ],\n  \"orderType\": \"Takeaway\",\n  \"paymentType\": \"Cash\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/orders",
@@ -510,7 +471,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"id\": \"{{customerId}}\",\n  \"items\": [\n    {\n      \"menuItem\": \"{{menuItemId1}}\",\n      \"name\": \"Pizza\",\n      \"quantity\": 2,\n      \"price\": 12.99\n    },\n    {\n      \"menuItem\": \"{{menuItemId2}}\",\n      \"name\": \"Burger\",\n      \"quantity\": 3,\n      \"price\": 9.99\n    },\n    {\n      \"menuItem\": \"{{menuItemId1}}\",\n      \"name\": \"Salad\",\n      \"quantity\": 1,\n      \"price\": 7.99\n    },\n    {\n      \"menuItem\": \"{{menuItemId2}}\",\n      \"name\": \"Pasta\",\n      \"quantity\": 2,\n      \"price\": 15.99\n    },\n    {\n      \"menuItem\": \"{{menuItemId1}}\",\n      \"name\": \"Dessert\",\n      \"quantity\": 4,\n      \"price\": 6.99\n    }\n  ],\n  \"orderType\": \"Delivery\"\n}"
+              "raw": "{\n  \"id\": \"{{customerId}}\",\n  \"items\": [\n    {\n      \"menuItem\": \"{{menuItemId1}}\",\n      \"quantity\": 2,\n      \"specialInstructions\": \"Extra sauce\"\n    },\n    {\n      \"menuItem\": \"{{menuItemId2}}\",\n      \"quantity\": 3\n    },\n    {\n      \"menuItem\": \"{{menuItemId1}}\",\n      \"quantity\": 1,\n      \"specialInstructions\": \"Dressing on the side\"\n    },\n    {\n      \"menuItem\": \"{{menuItemId2}}\",\n      \"quantity\": 2\n    },\n    {\n      \"menuItem\": \"{{menuItemId1}}\",\n      \"quantity\": 4,\n      \"specialInstructions\": \"No nuts\"\n    }\n  ],\n  \"orderType\": \"Delivery\",\n  \"paymentType\": \"Card\",\n  \"deliveryAddress\": \"456 Oak Avenue, Suite 12, Los Angeles, CA 90001\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/orders",

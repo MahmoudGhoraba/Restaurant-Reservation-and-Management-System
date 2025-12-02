@@ -22,16 +22,13 @@ export class CustomerController {
   @Post('order')
   @UseGuards(JwtAuthGuard)
   async placeOrder(@Body() placeOrderDto: PlaceOrderDto, @CurrentUser() user: any) {
-    const customerId = user.id;
+    const customerId = user.userId;
 
-    const order = await this.customerService.placeOrder(
-      customerId,
-      placeOrderDto.items,
-      placeOrderDto.paymentId,
-    );
+    const order = await this.customerService.placeOrder(customerId, placeOrderDto);
 
     return {
       status: 'success',
+      message: 'Order placed successfully',
       data: order,
     };
   }

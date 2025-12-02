@@ -123,7 +123,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"items\": [\n    {\n      \"menuItem\": \"{{menuItemId}}\",\n      \"name\": \"Pizza\",\n      \"quantity\": 1,\n      \"price\": 12.99\n    }\n  ]\n}"
+              "raw": "{\n  \"items\": [\n    {\n      \"menuItem\": \"{{menuItemId}}\",\n      \"quantity\": 1\n    }\n  ],\n  \"orderType\": \"Takeaway\",\n  \"paymentType\": \"Cash\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/customers/order",
@@ -172,7 +172,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"items\": [\n    {\n      \"menuItem\": \"{{menuItemId}}\",\n      \"name\": \"Pizza\",\n      \"quantity\": 2,\n      \"price\": 12.99\n    },\n    {\n      \"menuItem\": \"{{menuItemId}}\",\n      \"name\": \"Burger\",\n      \"quantity\": 1,\n      \"price\": 9.99\n    },\n    {\n      \"menuItem\": \"{{menuItemId}}\",\n      \"name\": \"Salad\",\n      \"quantity\": 1,\n      \"price\": 7.99\n    }\n  ]\n}"
+              "raw": "{\n  \"items\": [\n    {\n      \"menuItem\": \"{{menuItemId}}\",\n      \"quantity\": 2,\n      \"specialInstructions\": \"Extra cheese\"\n    },\n    {\n      \"menuItem\": \"{{menuItemId}}\",\n      \"quantity\": 1\n    },\n    {\n      \"menuItem\": \"{{menuItemId}}\",\n      \"quantity\": 1,\n      \"specialInstructions\": \"Dressing on the side\"\n    }\n  ],\n  \"orderType\": \"Delivery\",\n  \"paymentType\": \"Card\",\n  \"deliveryAddress\": \"789 Elm St, City, State 12345\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/customers/order",
@@ -221,7 +221,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"items\": [\n    {\n      \"menuItem\": \"{{menuItemId}}\",\n      \"name\": \"Coffee\",\n      \"quantity\": 2,\n      \"price\": 3.99\n    }\n  ],\n  \"paymentId\": \"{{paymentId}}\"\n}"
+              "raw": "{\n  \"items\": [\n    {\n      \"menuItem\": \"{{menuItemId}}\",\n      \"quantity\": 2\n    }\n  ],\n  \"orderType\": \"Takeaway\",\n  \"paymentType\": \"Online\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/customers/order",
@@ -255,7 +255,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"items\": [\n    {\n      \"menuItem\": \"{{menuItemId}}\",\n      \"name\": \"Pizza\",\n      \"quantity\": 1,\n      \"price\": 12.99\n    }\n  ]\n}"
+              "raw": "{\n  \"items\": [\n    {\n      \"menuItem\": \"{{menuItemId}}\",\n      \"quantity\": 1\n    }\n  ],\n  \"orderType\": \"Takeaway\",\n  \"paymentType\": \"Cash\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/customers/order",
@@ -309,7 +309,7 @@
           }
         },
         {
-          "name": "Place Order - Missing Item Fields",
+          "name": "Place Order - Missing Required Fields",
           "event": [
             {
               "listen": "test",
@@ -317,6 +317,11 @@
                 "exec": [
                   "pm.test('Status code is 400', function () {",
                   "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test('Error about missing fields', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.message).to.satisfy(msg => msg.includes('quantity') || msg.includes('orderType') || msg.includes('paymentType'));",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -344,6 +349,104 @@
             "body": {
               "mode": "raw",
               "raw": "{\n  \"items\": [\n    {\n      \"menuItem\": \"{{menuItemId}}\"\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/customers/order",
+              "host": ["{{baseUrl}}"],
+              "path": ["customers", "order"]
+            }
+          }
+        },
+        {
+          "name": "Place Order - DineIn without Reservation (Invalid)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 400', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test('Error about reservation', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.message).to.include('reservation');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    {\n      \"menuItem\": \"{{menuItemId}}\",\n      \"quantity\": 2\n    }\n  ],\n  \"orderType\": \"DineIn\",\n  \"paymentType\": \"Card\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/customers/order",
+              "host": ["{{baseUrl}}"],
+              "path": ["customers", "order"]
+            }
+          }
+        },
+        {
+          "name": "Place Order - Invalid Menu Item ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 404', function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "",
+                  "pm.test('Error about menu item not found', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.message).to.include('not found');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    {\n      \"menuItem\": \"507f1f77bcf86cd799439011\",\n      \"quantity\": 1\n    }\n  ],\n  \"orderType\": \"Takeaway\",\n  \"paymentType\": \"Cash\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/customers/order",

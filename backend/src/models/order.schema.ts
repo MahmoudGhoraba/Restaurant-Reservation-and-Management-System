@@ -10,13 +10,16 @@ export interface IOrderDocument extends Document {
     orderDate: Date;
     status: "Pending" | "Preparing" | "Served" | "Completed";
     totalAmount: number;
+    paymentType: "Cash" | "Card" | "Online";
     payment?: Types.ObjectId | null;
+    deliveryAddress?: string;
     items: Array<{
       menuItem: Types.ObjectId;
       name: string;
       quantity: number;
       price: number;
       subTotal: number;
+      specialInstructions?: string;
     }>;
   }
   
@@ -71,9 +74,20 @@ export const OrderSchema = new Schema(
       required: true,
     },
 
+    paymentType: {
+      type: String,
+      enum: ["Cash", "Card", "Online"],
+      required: true,
+    },
+
     payment: {
       type: Types.ObjectId,
       ref: "Payment",
+      default: null,
+    },
+
+    deliveryAddress: {
+      type: String,
       default: null,
     },
 
