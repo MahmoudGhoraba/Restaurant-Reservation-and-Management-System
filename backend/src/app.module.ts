@@ -9,6 +9,7 @@ import { OrderModule } from './order/order.module';
 import { MenuItemModule } from './menuitem/menuitem.module';
 import { ReservationModule } from './reservation/reservation.module';
 import { TableModule } from './table/table.module';
+import { ReportModule } from './report/report.module';
 import { DatabaseProvider } from './infrastructure/database/database';
 
 @Module({
@@ -28,6 +29,7 @@ import { DatabaseProvider } from './infrastructure/database/database';
     MenuItemModule,
     ReservationModule,
     TableModule,
+    ReportModule,
   ],
   controllers: [AppController],
   providers: [AppService, DatabaseProvider],

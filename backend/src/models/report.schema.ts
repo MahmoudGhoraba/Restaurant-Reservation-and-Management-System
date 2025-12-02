@@ -29,5 +29,6 @@ const ReportSchema = new Schema<IReport>({
 }, {    timestamps: true    }
 );
 
+export { ReportSchema };
 const Report = mongoose.model<IReport>('Report', ReportSchema);
 export default Report;
