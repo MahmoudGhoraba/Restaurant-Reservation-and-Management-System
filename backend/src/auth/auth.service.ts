@@ -11,12 +11,14 @@ import {
   UpdateProfileDto,
   ChangePasswordDto,
 } from './dto';
+import { MailService } from '../infrastructure/mail/mail.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     @InjectModel('User') private userModel: Model<IUser>,
     private jwtService: JwtService,
+    private mailService: MailService,
   ) {}
 
   async register(registerDto: RegisterDto): Promise<{ user: any; token: string }> {
@@ -129,13 +131,26 @@ export class AuthService {
       resetPasswordExpiry: otpExpiry,
     });
 
-    // TODO: Send email with OTP in production
-    // For now, return OTP for testing purposes
-    console.log(`Password reset OTP for ${email}: ${otp}`);
+    // Send OTP via email
+    try {
+      await this.mailService.sendPasswordResetOTP(user.email, otp, user.name);
+      console.log(`Password reset OTP sent to ${email}`);
+    } catch (error) {
+      console.error('Failed to send OTP email:', error);
+      // In development, still return OTP if email fails
+      if (process.env.NODE_ENV === 'development') {
+        return {
+          message: 'Password reset code has been sent to your email',
+          otp, // Return OTP in development if email fails
+        };
+      }
+      throw new BadRequestException('Failed to send password reset email. Please try again.');
+    }
 
     return {
       message: 'Password reset code has been sent to your email',
-      otp, // Remove this in production!
+      // Only return OTP in development mode for testing
+      ...(process.env.NODE_ENV === 'development' && { otp }),
     };
   }
 

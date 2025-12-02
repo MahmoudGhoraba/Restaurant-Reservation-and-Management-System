@@ -10,9 +10,11 @@ import { AdminGuard } from './guards/admin.guard';
 import { UserSchema } from '../models/user.schema';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
+import { MailModule } from '../infrastructure/mail/mail.module';
 
 @Module({
   imports: [
+    MailModule,
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({
       imports: [ConfigModule],
