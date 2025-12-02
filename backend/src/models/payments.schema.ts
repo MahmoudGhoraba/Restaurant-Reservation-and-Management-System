@@ -66,4 +66,5 @@ const PaymentSchema = new Schema<IPayment>(
 //     }
 // });
 
+export { PaymentSchema };
 export default mongoose.model<IPayment>("Payment", PaymentSchema);

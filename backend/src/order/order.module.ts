@@ -6,6 +6,7 @@ import { OrderSchema } from '../models/order.schema';
 import { reservationSchema } from '../models/reservation.schema';
 import { tableSchema } from '../models/table.schema';
 import { MenuItemSchema } from '../models/menuitem.schema';
+import { PaymentSchema } from '../models/payments.schema';
 import { AuthModule } from '../auth/auth.module';
 
 @Module({
@@ -15,6 +16,7 @@ import { AuthModule } from '../auth/auth.module';
       { name: 'Reservation', schema: reservationSchema },
       { name: 'Table', schema: tableSchema },
       { name: 'MenuItem', schema: MenuItemSchema },
+      { name: 'Payment', schema: PaymentSchema },
     ]),
     AuthModule,
   ],
