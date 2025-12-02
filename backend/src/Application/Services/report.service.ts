@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { IReport } from '../Data/models/report.schema';
-import { IOrderDocument } from '../Data/models/order.schema';
-import { IReservation } from '../Data/models/reservation.schema';
-import { IFeedback } from '../Data/models/feedback.schema';
-import { GenerateReportDto } from './dto/generate-report.dto';
+import { IReport } from '../../Data/models/report.schema';
+import { IOrderDocument } from '../../Data/models/order.schema';
+import { IReservation } from '../../Data/models/reservation.schema';
+import { IFeedback } from '../../Data/models/feedback.schema';
+import { GenerateReportDto } from '../../Data/Dto/report_dto/generate-report.dto';
 
 @Injectable()
 export class ReportService {

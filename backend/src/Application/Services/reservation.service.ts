@@ -2,7 +2,7 @@ import { Injectable, BadRequestException, NotFoundException } from '@nestjs/comm
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { IReservation } from '../../Data/models/reservation.schema';
-import { TableService } from './table.service';
+import { TableService } from '../Services/table.service';
 
 interface CreateReservationInput {
   customer: Types.ObjectId | string;

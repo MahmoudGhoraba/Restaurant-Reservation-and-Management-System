@@ -1,10 +1,10 @@
 import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { IMenuItem } from '../models/menuitem.schema';
-import { IOrderDocument } from '../models/order.schema';
-import { IFeedback } from '../models/feedback.schema';
-import { IReservation } from '../models/reservation.schema';
+import { IMenuItem } from '../../Data/models/menuitem.schema';
+import { IOrderDocument } from '../../Data/models/order.schema';
+import { IFeedback } from '../../Data/models/feedback.schema';
+import { IReservation } from '../../Data/models/reservation.schema';
 
 @Injectable()
 export class CustomerService {
