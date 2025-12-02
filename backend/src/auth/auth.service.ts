@@ -4,6 +4,13 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import * as bcrypt from 'bcrypt';
 import { IUser } from '../models/user.schema';
+import {
+  RegisterDto,
+  LoginDto,
+  ResetPasswordDto,
+  UpdateProfileDto,
+  ChangePasswordDto,
+} from './dto';
 
 @Injectable()
 export class AuthService {
@@ -12,13 +19,7 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async register(registerDto: {
-    name: string;
-    email: string;
-    password: string;
-    phone?: number;
-    role?: string;
-  }): Promise<{ user: any; token: string }> {
+  async register(registerDto: RegisterDto): Promise<{ user: any; token: string }> {
     const { name, email, password, phone, role = 'Customer' } = registerDto;
 
     // Validate role
@@ -67,10 +68,7 @@ export class AuthService {
     };
   }
 
-  async login(loginDto: {
-    email: string;
-    password: string;
-  }): Promise<{ user: any; token: string }> {
+  async login(loginDto: LoginDto): Promise<{ user: any; token: string }> {
     const { email, password } = loginDto;
 
     if (!email || !password) {
@@ -141,11 +139,7 @@ export class AuthService {
     };
   }
 
-  async resetPassword(resetDto: {
-    email: string;
-    otp: string;
-    newPassword: string;
-  }): Promise<{ message: string }> {
+  async resetPassword(resetDto: ResetPasswordDto): Promise<{ message: string }> {
     const { email, otp, newPassword } = resetDto;
 
     if (!email || !otp || !newPassword) {
@@ -197,7 +191,7 @@ export class AuthService {
 
   async updateProfile(
     userId: string,
-    updateDto: { name?: string; phone?: number },
+    updateDto: UpdateProfileDto,
   ): Promise<any> {
     const user = await this.userModel
       .findByIdAndUpdate(userId, updateDto, { new: true })
@@ -212,7 +206,7 @@ export class AuthService {
 
   async changePassword(
     userId: string,
-    changePasswordDto: { currentPassword: string; newPassword: string },
+    changePasswordDto: ChangePasswordDto,
   ): Promise<{ message: string }> {
     const { currentPassword, newPassword } = changePasswordDto;
 

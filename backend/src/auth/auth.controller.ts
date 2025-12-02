@@ -2,6 +2,14 @@ import { Controller, Post, Get, Put, Body, UseGuards, Request, Res } from '@nest
 import type { Response } from 'express';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import {
+  RegisterDto,
+  LoginDto,
+  ForgotPasswordDto,
+  ResetPasswordDto,
+  UpdateProfileDto,
+  ChangePasswordDto,
+} from './dto';
 
 @Controller('auth')
 export class AuthController {
@@ -9,13 +17,7 @@ export class AuthController {
 
   @Post('register')
   async register(
-    @Body() registerDto: {
-      name: string;
-      email: string;
-      password: string;
-      phone?: number;
-      role?: string;
-    },
+    @Body() registerDto: RegisterDto,
     @Res({ passthrough: true }) res: Response,
   ) {
     const result = await this.authService.register(registerDto);
@@ -33,7 +35,7 @@ export class AuthController {
 
   @Post('login')
   async login(
-    @Body() loginDto: { email: string; password: string },
+    @Body() loginDto: LoginDto,
     @Res({ passthrough: true }) res: Response,
   ) {
     const result = await this.authService.login(loginDto);
@@ -50,13 +52,13 @@ export class AuthController {
   }
 
   @Post('forgot-password')
-  async forgotPassword(@Body() body: { email: string }) {
-    return this.authService.forgotPassword(body.email);
+  async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto) {
+    return this.authService.forgotPassword(forgotPasswordDto.email);
   }
 
   @Post('reset-password')
   async resetPassword(
-    @Body() resetDto: { email: string; otp: string; newPassword: string },
+    @Body() resetDto: ResetPasswordDto,
   ) {
     return this.authService.resetPassword(resetDto);
   }
@@ -71,7 +73,7 @@ export class AuthController {
   @Put('profile')
   async updateProfile(
     @Request() req,
-    @Body() updateDto: { name?: string; phone?: number },
+    @Body() updateDto: UpdateProfileDto,
   ) {
     return this.authService.updateProfile(req.user.userId, updateDto);
   }
@@ -80,7 +82,7 @@ export class AuthController {
   @Put('change-password')
   async changePassword(
     @Request() req,
-    @Body() changePasswordDto: { currentPassword: string; newPassword: string },
+    @Body() changePasswordDto: ChangePasswordDto,
   ) {
     return this.authService.changePassword(req.user.userId, changePasswordDto);
   }
