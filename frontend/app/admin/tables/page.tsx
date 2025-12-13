@@ -123,16 +123,16 @@ export default function AdminTablesPage() {
 
   if (loading) {
     return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="container py-12">
         <div className="text-center">Loading...</div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div className="container py-12">
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-4xl font-bold text-gray-900">Manage Tables</h1>
+        <h1 className="text-4xl font-bold">Manage Tables</h1>
         <Button onClick={() => {
           setEditingTable(null);
           setFormData({
@@ -146,18 +146,18 @@ export default function AdminTablesPage() {
       </div>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-6">
+        <div className="alert alert-error mb-6">
           {error}
         </div>
       )}
 
       {showForm && (
-        <div className="bg-white p-6 rounded-lg shadow-md mb-8">
+        <div className="card mb-8">
           <h2 className="text-2xl font-semibold mb-4">
             {editingTable ? 'Edit Table' : 'Add Table'}
           </h2>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-2 gap-4">
               <Input
                 label="Capacity"
                 type="number"
@@ -193,16 +193,16 @@ export default function AdminTablesPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-3 gap-6">
         {tables.map((table) => (
-          <div key={table._id} className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
+          <div key={table._id} className="card">
             <div className="flex justify-between items-start mb-4">
               <div>
                 <h3 className="text-xl font-semibold">Table {table._id?.slice(-6) || 'N/A'}</h3>
-                <p className="text-gray-600 text-sm mt-1">Location: {table.location}</p>
+                <p className="text-sm mt-1">Location: {table.location}</p>
               </div>
             </div>
-            <p className="text-gray-700 mb-4">
+            <p className="mb-4">
               <span className="font-medium">Capacity:</span> {table.capacity} guests
             </p>
             <div className="flex gap-2">

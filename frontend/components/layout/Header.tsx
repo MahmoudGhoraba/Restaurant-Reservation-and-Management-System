@@ -40,22 +40,22 @@ export const Header = () => {
   // Prevent hydration mismatch by not rendering auth-dependent content until mounted
   if (!mounted) {
     return (
-      <header className="bg-white shadow-sm border-b sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <Link href="/" className="text-2xl font-bold text-blue-600 hover:text-blue-700 transition-colors">
+      <header className="header">
+        <div className="container">
+          <div className="header-content">
+            <Link href="/" className="logo">
               Restaurant Management
             </Link>
-            <nav className="flex items-center space-x-4">
+            <nav className="nav">
               <Link 
                 href="/login" 
-                className="text-gray-700 hover:text-blue-600 font-medium transition-colors px-3 py-2 rounded-md"
+                className="nav-link"
               >
                 Login
               </Link>
               <Link
                 href="/register"
-                className="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 font-medium transition-colors shadow-md hover:shadow-lg"
+                className="btn btn-primary btn-md"
               >
                 Register
               </Link>
@@ -67,33 +67,33 @@ export const Header = () => {
   }
 
   return (
-    <header className="bg-white shadow-sm border-b sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-          <Link href="/" className="text-2xl font-bold text-blue-600 hover:text-blue-700 transition-colors">
+    <header className="header">
+      <div className="container">
+        <div className="header-content">
+          <Link href="/" className="logo">
             Restaurant Management
           </Link>
           
-          <nav className="flex items-center space-x-4">
+          <nav className="nav">
             {isAuthenticated ? (
               <>
                 {isCustomer && (
                   <>
                     <Link 
                       href="/menu" 
-                      className="text-gray-700 hover:text-blue-600 font-medium transition-colors px-3 py-2 rounded-md"
+                      className="nav-link"
                     >
                       Menu
                     </Link>
                     <Link 
                       href="/my-orders" 
-                      className="text-gray-700 hover:text-blue-600 font-medium transition-colors px-3 py-2 rounded-md"
+                      className="nav-link"
                     >
                       My Orders
                     </Link>
                     <Link 
                       href="/reservations" 
-                      className="text-gray-700 hover:text-blue-600 font-medium transition-colors px-3 py-2 rounded-md"
+                      className="nav-link"
                     >
                       Reservations
                     </Link>
@@ -103,19 +103,19 @@ export const Header = () => {
                   <>
                     <Link 
                       href="/staff/dashboard" 
-                      className="text-gray-700 hover:text-blue-600 font-medium transition-colors px-3 py-2 rounded-md"
+                      className="nav-link"
                     >
                       Dashboard
                     </Link>
                     <Link 
                       href="/staff/orders" 
-                      className="text-gray-700 hover:text-blue-600 font-medium transition-colors px-3 py-2 rounded-md"
+                      className="nav-link"
                     >
                       Orders
                     </Link>
                     <Link 
                       href="/staff/reservations" 
-                      className="text-gray-700 hover:text-blue-600 font-medium transition-colors px-3 py-2 rounded-md"
+                      className="nav-link"
                     >
                       Reservations
                     </Link>
@@ -125,43 +125,43 @@ export const Header = () => {
                   <>
                     <Link 
                       href="/admin/dashboard" 
-                      className="text-gray-700 hover:text-blue-600 font-medium transition-colors px-3 py-2 rounded-md"
+                      className="nav-link"
                     >
                       Dashboard
                     </Link>
                     <Link 
                       href="/admin/orders" 
-                      className="text-gray-700 hover:text-blue-600 font-medium transition-colors px-3 py-2 rounded-md"
+                      className="nav-link"
                     >
                       Orders
                     </Link>
                     <Link 
                       href="/admin/menu" 
-                      className="text-gray-700 hover:text-blue-600 font-medium transition-colors px-3 py-2 rounded-md"
+                      className="nav-link"
                     >
                       Menu
                     </Link>
                     <Link 
                       href="/admin/tables" 
-                      className="text-gray-700 hover:text-blue-600 font-medium transition-colors px-3 py-2 rounded-md"
+                      className="nav-link"
                     >
                       Tables
                     </Link>
                     <Link 
                       href="/admin/reservations" 
-                      className="text-gray-700 hover:text-blue-600 font-medium transition-colors px-3 py-2 rounded-md"
+                      className="nav-link"
                     >
                       Reservations
                     </Link>
                     <Link 
                       href="/admin/reports" 
-                      className="text-gray-700 hover:text-blue-600 font-medium transition-colors px-3 py-2 rounded-md"
+                      className="nav-link"
                     >
                       Reports
                     </Link>
                   </>
                 )}
-                <span className="text-gray-700 font-medium">
+                <span className="font-medium">
                   {user?.name || user?.email}
                 </span>
                 <button
@@ -169,7 +169,7 @@ export const Header = () => {
                     auth.clearAuth();
                     window.location.href = '/login';
                   }}
-                  className="text-gray-700 hover:text-blue-600 transition-colors px-3 py-2 rounded-md font-medium"
+                  className="nav-link"
                 >
                   Logout
                 </button>
@@ -178,13 +178,13 @@ export const Header = () => {
               <>
                 <Link 
                   href="/login" 
-                  className="text-gray-700 hover:text-blue-600 font-medium transition-colors px-3 py-2 rounded-md"
+                  className="nav-link"
                 >
                   Login
                 </Link>
                 <Link
                   href="/register"
-                  className="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 font-medium transition-colors shadow-md hover:shadow-lg"
+                  className="btn btn-primary btn-md"
                 >
                   Register
                 </Link>

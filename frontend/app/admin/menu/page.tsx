@@ -139,16 +139,16 @@ export default function AdminMenuPage() {
 
   if (loading) {
     return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="container py-12">
         <div className="text-center">Loading...</div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div className="container py-12">
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-4xl font-bold text-gray-900">Manage Menu</h1>
+        <h1 className="text-4xl font-bold">Manage Menu</h1>
         <Button onClick={() => {
           setEditingItem(null);
           setFormData({
@@ -166,18 +166,18 @@ export default function AdminMenuPage() {
       </div>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-6">
+        <div className="alert alert-error mb-6">
           {error}
         </div>
       )}
 
       {showForm && (
-        <div className="bg-white p-6 rounded-lg shadow-md mb-8">
+        <div className="card mb-8">
           <h2 className="text-2xl font-semibold mb-4">
             {editingItem ? 'Edit Menu Item' : 'Add Menu Item'}
           </h2>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-2 gap-4">
               <Input
                 label="Name"
                 type="text"
@@ -208,14 +208,14 @@ export default function AdminMenuPage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="form-label">
                 Description
               </label>
               <textarea
                 required
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="form-textarea"
                 rows={3}
               />
             </div>
@@ -225,9 +225,9 @@ export default function AdminMenuPage() {
                 id="availability"
                 checked={formData.availability}
                 onChange={(e) => setFormData({ ...formData, availability: e.target.checked })}
-                className="mr-2"
+                className="form-checkbox"
               />
-              <label htmlFor="availability" className="text-sm font-medium text-gray-700">
+              <label htmlFor="availability" className="text-sm font-medium">
                 Available
               </label>
             </div>
@@ -250,25 +250,25 @@ export default function AdminMenuPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-3 gap-6">
         {menuItems.map((item) => (
-          <div key={item._id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+          <div key={item._id} className="card">
             {item.imageUrl && (
-              <img src={item.imageUrl} alt={item.name} className="w-full h-48 object-cover" />
+              <img src={item.imageUrl} alt={item.name} className="img-responsive img-cover" style={{ width: '100%', height: '12rem', objectFit: 'cover' }} />
             )}
             <div className="p-6">
               <div className="flex justify-between items-start mb-2">
-                <h3 className="text-xl font-semibold text-gray-900">{item.name}</h3>
-                <span className="text-lg font-bold text-blue-600">${item.price.toFixed(2)}</span>
+                <h3 className="text-xl font-semibold">{item.name}</h3>
+                <span className="text-lg font-bold">${item.price.toFixed(2)}</span>
               </div>
-              <p className="text-gray-600 mb-4">{item.description}</p>
+              <p className="mb-4">{item.description}</p>
               <div className="flex items-center justify-between mb-4">
-                <span className="text-sm text-gray-500">Category: {item.category}</span>
+                <span className="text-sm">Category: {item.category}</span>
                 <span
-                  className={`px-2 py-1 rounded text-xs ${
+                  className={`badge ${
                     (item.availability ?? item.available ?? true)
-                      ? 'bg-green-100 text-green-800'
-                      : 'bg-red-100 text-red-800'
+                      ? 'badge-success'
+                      : 'badge-error'
                   }`}
                 >
                   {(item.availability ?? item.available ?? true) ? 'Available' : 'Unavailable'}

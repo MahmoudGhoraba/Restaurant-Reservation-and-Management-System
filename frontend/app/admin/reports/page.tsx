@@ -109,46 +109,46 @@ export default function AdminReportsPage() {
 
   if (loading) {
     return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="container py-12">
         <div className="text-center">Loading...</div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div className="container py-12">
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-4xl font-bold text-gray-900">Reports</h1>
+        <h1 className="text-4xl font-bold">Reports</h1>
         <Button onClick={() => setShowForm(true)} variant="primary">
           Generate Report
         </Button>
       </div>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-6">
+        <div className="alert alert-error mb-6">
           {error}
         </div>
       )}
 
       {showForm && (
-        <div className="bg-white p-6 rounded-lg shadow-md mb-8">
+        <div className="card mb-8">
           <h2 className="text-2xl font-semibold mb-4">Generate New Report</h2>
           <form onSubmit={handleGenerate} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="form-label">
                 Report Type
               </label>
               <select
                 value={formData.reportType}
                 onChange={(e) => setFormData({ ...formData, reportType: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="form-select"
               >
                 {REPORT_TYPES.map((rt) => (
                   <option key={rt} value={rt}>{rt}</option>
                 ))}
               </select>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-2 gap-4">
               <Input
                 label="Start Date"
                 type="date"
@@ -188,22 +188,22 @@ export default function AdminReportsPage() {
       )}
 
       {reports.length === 0 ? (
-        <div className="text-center py-12 bg-white rounded-lg shadow-md">
-          <p className="text-gray-600">No reports found. Generate a new report to get started.</p>
+        <div className="text-center py-12 card">
+          <p>No reports found. Generate a new report to get started.</p>
         </div>
       ) : (
         <div className="space-y-4">
           {reports.map((report) => (
-            <div key={report._id} className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
+            <div key={report._id} className="card">
               <div className="flex justify-between items-start mb-4">
                 <div>
                   <h3 className="text-xl font-semibold capitalize">{report.reportType} Report</h3>
-                  <p className="text-gray-600 text-sm mt-1">
+                  <p className="text-sm mt-1">
                     Period: {new Date(report.startDate).toLocaleDateString()} -{' '}
                     {new Date(report.endDate).toLocaleDateString()}
                   </p>
                   {report.generatedAt && (
-                    <p className="text-gray-500 text-xs mt-1">
+                    <p className="text-xs mt-1" style={{ opacity: 0.7 }}>
                       Generated: {new Date(report.generatedAt).toLocaleString()}
                     </p>
                   )}
@@ -218,7 +218,7 @@ export default function AdminReportsPage() {
               </div>
               {report.data && (
                 <div className="border-t pt-4">
-                  <pre className="text-sm text-gray-700 overflow-x-auto">
+                  <pre className="text-sm overflow-x-auto" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
                     {JSON.stringify(report.data, null, 2)}
                   </pre>
                 </div>
