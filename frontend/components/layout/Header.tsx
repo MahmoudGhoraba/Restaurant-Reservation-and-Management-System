@@ -71,7 +71,7 @@ export const Header = () => {
       <div className="container">
         <div className="header-content">
           <Link href="/" className="logo">
-            Restaurant Management
+            Mama Mama
           </Link>
           
           <nav className="nav">

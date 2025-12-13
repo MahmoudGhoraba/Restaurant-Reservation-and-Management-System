@@ -338,14 +338,14 @@ export default function MenuPage() {
                     {(item.availability ?? item.available ?? true) ? 'Available' : 'Unavailable'}
                   </span>
                 </div>
-                {(item.availability ?? item.available ?? true) && auth.isAuthenticated() && (
+                {(item.availability ?? item.available ?? true) && (
                   <Button
                     variant="primary"
                     size="sm"
                     className="btn-full"
                     onClick={() => addToCart(item)}
                   >
-                    Add to Cart
+                    {auth.isAuthenticated() ? 'Add to Cart' : 'Login to Order'}
                   </Button>
                 )}
               </div>

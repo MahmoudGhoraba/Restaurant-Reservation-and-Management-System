@@ -6,8 +6,8 @@ export default function Home() {
         <div className="container">
           <div className="hero-content">
             <h1 className="text-6xl font-bold mb-6">
-              Welcome to Our
-              <span className="block">Restaurant</span>
+              Welcome to
+              <span className="block"> Mama Mama</span>
             </h1>
             <p className="text-xl mb-8">
               Experience culinary excellence in an atmosphere of warmth and sophistication
