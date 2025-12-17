@@ -129,6 +129,17 @@ export class OrderService {
       .populate("payment")
       .exec();
   }
+  async getOrdersByCustomer(customerId: string): Promise<IOrderDocument[]> {
+    return this.orderModel
+      .find({ customer: new Types.ObjectId(customerId) })
+      .sort({ orderDate: -1 })
+      .populate('items.menuItem', 'name price')
+      .populate('customer', 'name')
+      .populate('reservation')
+      .populate('table')
+      .populate('payment')
+      .exec();
+  }
 
   async getOrderById(orderId: string): Promise<IOrderDocument | null> {
     return this.orderModel

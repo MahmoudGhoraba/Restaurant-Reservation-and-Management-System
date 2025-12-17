@@ -13,7 +13,7 @@ export class CustomerService {
     @InjectModel('Order') private orderModel: Model<IOrderDocument>,
     @InjectModel('Feedback') private feedbackModel: Model<IFeedback>,
     @InjectModel('Reservation') private reservationModel: Model<IReservation>,
-  ) {}
+  ) { }
 
   async browseMenu() {
     return this.menuItemModel.find({ availability: true }).exec();
@@ -47,7 +47,7 @@ export class CustomerService {
 
     for (const item of items) {
       const menuItem = await this.menuItemModel.findById(item.menuItem);
-      
+
       if (!menuItem) {
         throw new NotFoundException(`Menu item with ID ${item.menuItem} not found`);
       }
@@ -79,7 +79,7 @@ export class CustomerService {
     // If DineIn, get table from reservation
     if (orderType === 'DineIn' && reservationId) {
       const reservation = await this.reservationModel.findById(reservationId);
-      
+
       if (!reservation) {
         throw new NotFoundException('Reservation not found');
       }
@@ -117,5 +117,16 @@ export class CustomerService {
     });
 
     return feedback.save();
+  }
+  async getOrdersByCustomer(customerId: string): Promise<IOrderDocument[]> {
+    return this.orderModel
+      .find({ customer: new Types.ObjectId(customerId) })
+      .sort({ orderDate: -1 })
+      .populate('items.menuItem', 'name price')
+      .populate('customer', 'name')
+      .populate('reservation')
+      .populate('table')
+      .populate('payment')
+      .exec();
   }
 }

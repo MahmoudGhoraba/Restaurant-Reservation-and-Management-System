@@ -32,6 +32,19 @@ export class CustomerController {
       data: order,
     };
   }
+  @Get('orders')
+  @UseGuards(JwtAuthGuard)
+  async getMyOrders(@CurrentUser() user: any) {
+    const customerId = user.userId;
+
+    const orders = await this.customerService.getOrdersByCustomer(customerId);
+
+    return {
+      status: 'success',
+      results: orders.length,
+      data: orders,
+    };
+  }
 
   @Get('order/:orderId')
   @UseGuards(JwtAuthGuard)

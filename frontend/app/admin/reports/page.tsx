@@ -47,10 +47,22 @@ export default function AdminReportsPage() {
 
   const fetchReports = async () => {
     try {
-      const response = await apiClient.get<Report[]>('/reports');
-      if (response.data) {
-        setReports(Array.isArray(response.data) ? response.data : []);
-      }
+      const response = await apiClient.get<any>('/reports');
+      const maybeReports = response.data?.data ?? response.data ?? [];
+
+      const normalized = (Array.isArray(maybeReports) ? maybeReports : []).map((r: any) => ({
+        _id: r._id,
+        reportType: r.reportType,
+        // backend puts the period in content.period.startDate/endDate
+        startDate: r.content?.period?.startDate ?? r.startDate ?? '',
+        endDate: r.content?.period?.endDate ?? r.endDate ?? '',
+        // backend uses generatedDate field
+        generatedAt: r.generatedDate ?? r.generatedAt ?? r.createdAt ?? null,
+        // put the actual report payload into `data` for the UI
+        data: r.content ?? r.data ?? null,
+      }));
+
+      setReports(normalized);
     } catch (err) {
       setError('Failed to load reports');
     } finally {

@@ -35,13 +35,18 @@ export default function MyOrdersPage() {
           });
           setMenuItems(menuMap);
         }
+
+        // Fetch user's orders
+        const ordersRes = await apiClient.get<{ status: string; results: number; data: Order[] }>('/customers/orders');
+        if (ordersRes.data) {
+          setOrders(ordersRes.data.data || []);
+        }
       } catch (err) {
-        console.error('Failed to load menu items:', err);
+        console.error('Failed to load data:', err);
       } finally {
         setLoading(false);
       }
     };
-
     fetchData();
   }, [router]);
 
@@ -146,9 +151,8 @@ export default function MyOrdersPage() {
           {orders.map((order) => (
             <div
               key={order._id}
-              className={`card ${
-                selectedOrder === order._id ? 'border' : ''
-              }`}
+              className={`card ${selectedOrder === order._id ? 'border' : ''
+                }`}
               style={selectedOrder === order._id ? { borderWidth: '2px', borderColor: '#000000' } : {}}
             >
               <div className="flex justify-between items-start mb-4">
@@ -169,17 +173,16 @@ export default function MyOrdersPage() {
                     ${order.totalAmount ? order.totalAmount.toFixed(2) : '0.00'}
                   </p>
                   <span
-                    className={`badge mt-2 ${
-                      order.status === 'Completed'
+                    className={`badge mt-2 ${order.status === 'Completed'
                         ? 'badge-success'
                         : order.status === 'Served'
-                        ? 'badge-info'
-                        : order.status === 'Preparing'
-                        ? 'badge-warning'
-                        : order.status === 'Pending'
-                        ? 'badge-primary'
-                        : 'badge-primary'
-                    }`}
+                          ? 'badge-info'
+                          : order.status === 'Preparing'
+                            ? 'badge-warning'
+                            : order.status === 'Pending'
+                              ? 'badge-primary'
+                              : 'badge-primary'
+                      }`}
                   >
                     {order.status}
                   </span>
@@ -248,13 +251,12 @@ export default function MyOrdersPage() {
                   <p className="text-sm">
                     Payment Status:{' '}
                     <span
-                      className={`font-medium ${
-                        order.paymentStatus === 'paid'
+                      className={`font-medium ${order.paymentStatus === 'paid'
                           ? 'text-primary'
                           : order.paymentStatus === 'refunded'
-                          ? 'text-primary'
-                          : 'text-primary'
-                      }`}
+                            ? 'text-primary'
+                            : 'text-primary'
+                        }`}
                     >
                       {order.paymentStatus}
                     </span>

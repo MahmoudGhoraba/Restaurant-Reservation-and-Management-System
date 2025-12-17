@@ -6,10 +6,12 @@ import { apiClient } from '@/lib/api';
 import { auth } from '@/lib/auth';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import type { MenuItem, OrderItem, CreateOrderDto } from '@/types';
+import type { MenuItem, OrderItem, CreateOrderDto, Reservation } from '@/types';
 
 interface CartItem extends OrderItem {
   menuItem: MenuItem;
+  menuItemId: string;
+  specialInstructions?: string;
 }
 
 export default function MenuPage() {
@@ -20,10 +22,11 @@ export default function MenuPage() {
   const [error, setError] = useState('');
   const [showCart, setShowCart] = useState(false);
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
-  const [specialInstructions, setSpecialInstructions] = useState('');
-  const [orderType, setOrderType] = useState<'Takeaway' | 'DineIn' | 'Delivery'>('DineIn');
+  const [orderType, setOrderType] = useState<'Takeaway' | 'DineIn' | 'Delivery'>('Takeaway');
   const [paymentType, setPaymentType] = useState<'Cash' | 'Card' | 'Online'>('Card');
   const [deliveryAddress, setDeliveryAddress] = useState('');
+  const [reservations, setReservations] = useState<Reservation[]>([]);
+  const [selectedReservationId, setSelectedReservationId] = useState<string>('');
 
   useEffect(() => {
     const fetchMenuItems = async () => {
@@ -32,7 +35,6 @@ export default function MenuPage() {
         if (response.error) {
           setError(response.error);
         } else if (response.data) {
-          // Handle wrapped response structure
           const items = response.data.data || [];
           setMenuItems(items);
         }
@@ -46,9 +48,29 @@ export default function MenuPage() {
     fetchMenuItems();
   }, []);
 
+  // fetch user's reservations when DineIn is selected
+  useEffect(() => {
+    const fetchReservations = async () => {
+      if (!auth.isAuthenticated()) return;
+      try {
+        const res = await apiClient.get<{ status: string; results: number; data: Reservation[] }>('/reservations/my-reservations');
+        if (res.error) {
+          setError(res.error);
+        } else if (res.data) {
+          setReservations(res.data.data || []);
+        }
+      } catch {
+        setError('Failed to load reservations');
+      }
+    };
+
+    if (orderType === 'DineIn') fetchReservations();
+  }, [orderType]);
+
   const addToCart = (item: MenuItem) => {
     if (!(item.availability ?? item.available ?? true)) return;
-    
+    if (!item._id) return;
+
     const existingItem = cart.find((cartItem) => cartItem.menuItemId === item._id);
     if (existingItem) {
       setCart(
@@ -62,9 +84,10 @@ export default function MenuPage() {
       setCart([
         ...cart,
         {
-          menuItemId: item._id!,
+          menuItemId: item._id,
           quantity: 1,
           menuItem: item,
+          specialInstructions: '',
         },
       ]);
     }
@@ -82,6 +105,14 @@ export default function MenuPage() {
     setCart(
       cart.map((item) =>
         item.menuItemId === menuItemId ? { ...item, quantity } : item
+      )
+    );
+  };
+
+  const updateItemInstructions = (menuItemId: string, instructions: string) => {
+    setCart(
+      cart.map((item) =>
+        item.menuItemId === menuItemId ? { ...item, specialInstructions: instructions } : item
       )
     );
   };
@@ -104,19 +135,26 @@ export default function MenuPage() {
       return;
     }
 
+    if (orderType === 'DineIn' && !selectedReservationId) {
+      setError('Please select a reservation for Dine In orders');
+      return;
+    }
+
     setIsPlacingOrder(true);
     setError('');
 
     try {
-      const orderDto = {
+      const orderDto: CreateOrderDto & { reservationId?: string; orderType: string; paymentType: string; deliveryAddress?: string } = {
         items: cart.map((item) => ({
           menuItem: item.menuItemId,
           quantity: item.quantity,
-          specialInstructions: item.specialInstructions,
+          specialInstructions: item.specialInstructions || undefined,
         })),
         orderType,
         paymentType,
         deliveryAddress: orderType === 'Delivery' ? deliveryAddress : undefined,
+        // include reservationId only for DineIn
+        ...(orderType === 'DineIn' ? { reservationId: selectedReservationId } : {}),
       };
 
       const response = await apiClient.post<{ status: string; message: string; data: any }>('/customers/order', orderDto);
@@ -128,9 +166,9 @@ export default function MenuPage() {
 
       if (response.data) {
         setCart([]);
-        setSpecialInstructions('');
         setDeliveryAddress('');
         setShowCart(false);
+        setSelectedReservationId('');
         router.push('/my-orders');
       }
     } catch (err) {
@@ -211,6 +249,16 @@ export default function MenuPage() {
                           +
                         </button>
                       </div>
+
+                      <div className="mt-3">
+                        <Input
+                          label="Item notes (optional)"
+                          type="text"
+                          value={item.specialInstructions || ''}
+                          onChange={(e) => updateItemInstructions(item.menuItemId, e.target.value)}
+                          placeholder="Any notes for this item..."
+                        />
+                      </div>
                     </div>
                     <div className="text-right">
                       <p className="font-bold">${(item.menuItem.price * item.quantity).toFixed(2)}</p>
@@ -227,9 +275,7 @@ export default function MenuPage() {
               </div>
 
               <div className="mb-4">
-                <label className="form-label">
-                  Order Type
-                </label>
+                <label className="form-label">Order Type</label>
                 <select
                   value={orderType}
                   onChange={(e) => setOrderType(e.target.value as 'Takeaway' | 'DineIn' | 'Delivery')}
@@ -240,6 +286,24 @@ export default function MenuPage() {
                   <option value="Delivery">Delivery</option>
                 </select>
               </div>
+
+              {orderType === 'DineIn' && (
+                <div className="mb-4">
+                  <label className="form-label">Select Reservation</label>
+                  <select
+                    value={selectedReservationId}
+                    onChange={(e) => setSelectedReservationId(e.target.value)}
+                    className="form-select mb-4"
+                  >
+                    <option value="">-- Select a reservation --</option>
+                    {reservations.map((r) => (
+                      <option key={r._id} value={r._id}>
+                        {new Date(r.reservationDate).toLocaleDateString()} {r.reservationTime} — Guests {r.numberOfGuests}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
 
               {orderType === 'Delivery' && (
                 <div className="mb-4">
@@ -255,9 +319,7 @@ export default function MenuPage() {
               )}
 
               <div className="mb-4">
-                <label className="form-label">
-                  Payment Type
-                </label>
+                <label className="form-label">Payment Type</label>
                 <select
                   value={paymentType}
                   onChange={(e) => setPaymentType(e.target.value as 'Cash' | 'Card' | 'Online')}
@@ -267,16 +329,6 @@ export default function MenuPage() {
                   <option value="Cash">Cash</option>
                   <option value="Online">Online</option>
                 </select>
-              </div>
-
-              <div className="mb-4">
-                <Input
-                  label="Special Instructions (Optional)"
-                  type="text"
-                  value={specialInstructions}
-                  onChange={(e) => setSpecialInstructions(e.target.value)}
-                  placeholder="Any special requests for your order..."
-                />
               </div>
 
               <div className="border-t pt-4 mb-4">
@@ -292,7 +344,7 @@ export default function MenuPage() {
                 className="btn-full"
                 onClick={handlePlaceOrder}
                 isLoading={isPlacingOrder}
-                disabled={orderType === 'Delivery' && !deliveryAddress}
+                disabled={(orderType === 'Delivery' && !deliveryAddress) || (orderType === 'DineIn' && !selectedReservationId)}
               >
                 Place Order
               </Button>
@@ -308,10 +360,7 @@ export default function MenuPage() {
       ) : (
         <div className="grid grid-3 gap-6">
           {menuItems.map((item) => (
-            <div
-              key={item._id}
-              className="card"
-            >
+            <div key={item._id} className="card">
               {item.imageUrl && (
                 <img
                   src={item.imageUrl}
@@ -329,22 +378,13 @@ export default function MenuPage() {
                 <div className="flex items-center justify-between mb-4">
                   <span className="text-sm">Category: {item.category}</span>
                   <span
-                    className={`badge ${
-                      (item.availability ?? item.available ?? true)
-                        ? 'badge-success'
-                        : 'badge-error'
-                    }`}
+                    className={`badge ${(item.availability ?? item.available ?? true) ? 'badge-success' : 'badge-error'}`}
                   >
                     {(item.availability ?? item.available ?? true) ? 'Available' : 'Unavailable'}
                   </span>
                 </div>
                 {(item.availability ?? item.available ?? true) && (
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    className="btn-full"
-                    onClick={() => addToCart(item)}
-                  >
+                  <Button variant="primary" size="sm" className="btn-full" onClick={() => addToCart(item)}>
                     {auth.isAuthenticated() ? 'Add to Cart' : 'Login to Order'}
                   </Button>
                 )}

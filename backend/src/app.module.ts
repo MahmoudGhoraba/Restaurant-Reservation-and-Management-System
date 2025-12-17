@@ -10,6 +10,7 @@ import { MenuItemModule } from './Application/Modules/menuitem.module';
 import { ReservationModule } from './Application/Modules/reservation.module';
 import { TableModule } from './Application/Modules/table.module';
 import { ReportModule } from './Application/Modules/report.module';
+import { TestController } from './Application/Controllers/test.controller';
 import { DatabaseProvider } from './infrastructure/database/database';
 
 @Module({
@@ -31,7 +32,7 @@ import { DatabaseProvider } from './infrastructure/database/database';
     TableModule,
     ReportModule,
   ],
-  controllers: [AppController],
+  controllers: [AppController, TestController],
   providers: [AppService, DatabaseProvider],
 })
 export class AppModule { }
