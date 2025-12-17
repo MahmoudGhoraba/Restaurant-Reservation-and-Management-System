@@ -65,14 +65,14 @@ export default function AdminDashboardPage() {
         if (menuRes.data) {
           setStats((prev) => ({
             ...prev,
-            totalMenuItems: menuRes.data.data?.length || 0,
+            totalMenuItems: menuRes?.data?.data?.length || 0,
           }));
         }
 
         if (tablesRes.data) {
           setStats((prev) => ({
             ...prev,
-            totalTables: tablesRes.data.data?.length || 0,
+            totalTables: tablesRes?.data?.data?.length || 0,
           }));
         }
       } catch (err) {

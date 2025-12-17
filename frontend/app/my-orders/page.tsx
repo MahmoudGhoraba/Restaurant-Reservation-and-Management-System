@@ -101,7 +101,7 @@ export default function MyOrdersPage() {
         </div>
       )}
 
-      {/* Track Order Section */}
+      {/* Track Order Section disabled
       <div className="card mb-8">
         <h2 className="text-2xl font-semibold mb-4">Track an Order</h2>
         <div className="flex gap-4">
@@ -134,6 +134,7 @@ export default function MyOrdersPage() {
           </Button>
         </div>
       </div>
+      */}
 
       {/* Orders List */}
       {orders.length === 0 ? (

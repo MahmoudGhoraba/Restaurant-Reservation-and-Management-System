@@ -70,9 +70,11 @@ export default function AdminOrdersPage() {
       }
 
       if (response.data) {
+        const updatedOrder = response.data.data || response.data;
         setOrders((prev) =>
-          prev.map((o) => (o._id === orderId ? response.data!.data : o))
+          prev.map((o) => (o._id === orderId ? { ...o, status: newStatus } : o))
         );
+        setError(''); // Clear any previous errors
       }
     } catch (err) {
       setError('Failed to update order status');
@@ -151,7 +153,7 @@ export default function AdminOrdersPage() {
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="text-2xl font-bold">${order.totalAmount.toFixed(2)}</p>
+                  <p className="text-2xl font-bold">${order.totalAmount?.toFixed(2)}</p>
                   <span
                     className={`badge mt-2 ${
                       order.status === 'Completed'

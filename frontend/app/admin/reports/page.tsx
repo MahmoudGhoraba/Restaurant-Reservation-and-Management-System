@@ -18,6 +18,348 @@ interface Report {
 
 const REPORT_TYPES = ['Sales', 'Reservation', 'Staff Performance', 'Feedback'];
 
+const renderReportContent = (reportType: string, data: any) => {
+  if (!data) return <p className="text-sm opacity-70">No data available</p>;
+
+  switch (reportType) {
+    case 'Sales':
+      return renderSalesReport(data);
+    case 'Reservation':
+      return renderReservationReport(data);
+    case 'Staff Performance':
+      return renderStaffPerformanceReport(data);
+    case 'Feedback':
+      return renderFeedbackReport(data);
+    default:
+      return (
+        <pre className="text-sm overflow-x-auto" style={{ whiteSpace: 'pre-wrap' }}>
+          {JSON.stringify(data, null, 2)}
+        </pre>
+      );
+  }
+};
+
+const renderSalesReport = (data: any) => {
+  const summary = data.summary || {};
+  const byOrderType = data.byOrderType || [];
+  const byPaymentType = data.byPaymentType || [];
+  const dailyBreakdown = data.dailyBreakdown || [];
+
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-blue-50 p-4 rounded-lg">
+          <p className="text-sm font-medium text-blue-900">Total Revenue</p>
+          <p className="text-2xl font-bold text-blue-700">
+            ${summary.totalRevenue?.toFixed(2) || '0.00'}
+          </p>
+        </div>
+        <div className="bg-green-50 p-4 rounded-lg">
+          <p className="text-sm font-medium text-green-900">Total Orders</p>
+          <p className="text-2xl font-bold text-green-700">{summary.totalOrders || 0}</p>
+        </div>
+        <div className="bg-purple-50 p-4 rounded-lg">
+          <p className="text-sm font-medium text-purple-900">Avg Order Value</p>
+          <p className="text-2xl font-bold text-purple-700">
+            ${summary.avgOrderValue?.toFixed(2) || '0.00'}
+          </p>
+        </div>
+      </div>
+
+      {byOrderType.length > 0 && (
+        <div>
+          <h4 className="font-semibold mb-3">Sales by Order Type</h4>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Orders</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Revenue</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {byOrderType.map((item: any, idx: number) => (
+                  <tr key={idx}>
+                    <td className="px-4 py-2 text-sm">{item._id || 'N/A'}</td>
+                    <td className="px-4 py-2 text-sm">{item.count || 0}</td>
+                    <td className="px-4 py-2 text-sm">${item.revenue?.toFixed(2) || '0.00'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {byPaymentType.length > 0 && (
+        <div>
+          <h4 className="font-semibold mb-3">Sales by Payment Type</h4>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Payment Type</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Orders</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Revenue</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {byPaymentType.map((item: any, idx: number) => (
+                  <tr key={idx}>
+                    <td className="px-4 py-2 text-sm">{item._id || 'N/A'}</td>
+                    <td className="px-4 py-2 text-sm">{item.count || 0}</td>
+                    <td className="px-4 py-2 text-sm">${item.revenue?.toFixed(2) || '0.00'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {dailyBreakdown.length > 0 && (
+        <div>
+          <h4 className="font-semibold mb-3">Daily Sales</h4>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Orders</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Revenue</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {dailyBreakdown.map((item: any, idx: number) => (
+                  <tr key={idx}>
+                    <td className="px-4 py-2 text-sm">{item._id}</td>
+                    <td className="px-4 py-2 text-sm">{item.orders || 0}</td>
+                    <td className="px-4 py-2 text-sm">${item.revenue?.toFixed(2) || '0.00'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const renderReservationReport = (data: any) => {
+  const summary = data.summary || {};
+  const byStatus = data.byStatus || [];
+  const dailyBreakdown = data.dailyBreakdown || [];
+  const peakHours = data.peakHours || [];
+
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="bg-blue-50 p-4 rounded-lg">
+          <p className="text-sm font-medium text-blue-900">Total Reservations</p>
+          <p className="text-2xl font-bold text-blue-700">{summary.totalReservations || 0}</p>
+        </div>
+        <div className="bg-green-50 p-4 rounded-lg">
+          <p className="text-sm font-medium text-green-900">Avg Party Size</p>
+          <p className="text-2xl font-bold text-green-700">
+            {summary.avgPartySize?.toFixed(1) || '0.0'}
+          </p>
+        </div>
+      </div>
+
+      {byStatus.length > 0 && (
+        <div>
+          <h4 className="font-semibold mb-3">Reservations by Status</h4>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Count</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {byStatus.map((item: any, idx: number) => (
+                  <tr key={idx}>
+                    <td className="px-4 py-2 text-sm capitalize">{item._id || 'N/A'}</td>
+                    <td className="px-4 py-2 text-sm">{item.count || 0}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {dailyBreakdown.length > 0 && (
+        <div>
+          <h4 className="font-semibold mb-3">Daily Reservations</h4>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Count</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Total Guests</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {dailyBreakdown.map((item: any, idx: number) => (
+                  <tr key={idx}>
+                    <td className="px-4 py-2 text-sm">{item._id}</td>
+                    <td className="px-4 py-2 text-sm">{item.count || 0}</td>
+                    <td className="px-4 py-2 text-sm">{item.totalGuests || 0}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {peakHours.length > 0 && (
+        <div>
+          <h4 className="font-semibold mb-3">Peak Reservation Hours</h4>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Hour</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Reservations</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {peakHours.map((item: any, idx: number) => (
+                  <tr key={idx}>
+                    <td className="px-4 py-2 text-sm">{item._id}:00</td>
+                    <td className="px-4 py-2 text-sm">{item.count || 0}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const renderStaffPerformanceReport = (data: any) => {
+  const staffPerformance = data.staffPerformance || [];
+
+  return (
+    <div className="space-y-6">
+      {staffPerformance.length > 0 ? (
+        <div>
+          <h4 className="font-semibold mb-3">Staff Performance</h4>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Staff</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Orders Handled</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Total Revenue</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Avg Order Value</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {staffPerformance.map((item: any, idx: number) => (
+                  <tr key={idx}>
+                    <td className="px-4 py-2 text-sm">
+                      {item.staffDetails?.name || item._id || 'N/A'}
+                    </td>
+                    <td className="px-4 py-2 text-sm">{item.ordersHandled || 0}</td>
+                    <td className="px-4 py-2 text-sm">${item.totalRevenue?.toFixed(2) || '0.00'}</td>
+                    <td className="px-4 py-2 text-sm">${item.avgOrderValue?.toFixed(2) || '0.00'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ) : (
+        <p className="text-sm opacity-70">No staff performance data available for this period</p>
+      )}
+    </div>
+  );
+};
+
+const renderFeedbackReport = (data: any) => {
+  const summary = data.summary || {};
+  const ratingDistribution = data.ratingDistribution || [];
+  const recentFeedback = data.recentFeedback || [];
+
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="bg-blue-50 p-4 rounded-lg">
+          <p className="text-sm font-medium text-blue-900">Total Feedback</p>
+          <p className="text-2xl font-bold text-blue-700">{summary.totalFeedback || 0}</p>
+        </div>
+        <div className="bg-yellow-50 p-4 rounded-lg">
+          <p className="text-sm font-medium text-yellow-900">Average Rating</p>
+          <p className="text-2xl font-bold text-yellow-700">
+            {summary.avgRating?.toFixed(1) || '0.0'} / 5.0
+          </p>
+        </div>
+      </div>
+
+      {ratingDistribution.length > 0 && (
+        <div>
+          <h4 className="font-semibold mb-3">Rating Distribution</h4>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Rating</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Count</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {ratingDistribution.map((item: any, idx: number) => (
+                  <tr key={idx}>
+                    <td className="px-4 py-2 text-sm">
+                      {'⭐'.repeat(item._id || 0)}
+                    </td>
+                    <td className="px-4 py-2 text-sm">{item.count || 0}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {recentFeedback.length > 0 && (
+        <div>
+          <h4 className="font-semibold mb-3">Recent Feedback</h4>
+          <div className="space-y-3">
+            {recentFeedback.map((feedback: any, idx: number) => (
+              <div key={idx} className="bg-gray-50 p-4 rounded-lg">
+                <div className="flex justify-between items-start mb-2">
+                  <p className="text-sm font-medium">
+                    {feedback.customer?.name || 'Anonymous'}
+                  </p>
+                  <p className="text-sm text-yellow-600">
+                    {'⭐'.repeat(feedback.rating || 0)}
+                  </p>
+                </div>
+                {feedback.comments && (
+                  <p className="text-sm text-gray-700">{feedback.comments}</p>
+                )}
+                <p className="text-xs text-gray-500 mt-2">
+                  {new Date(feedback.date).toLocaleDateString()}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 export default function AdminReportsPage() {
   const router = useRouter();
   const [reports, setReports] = useState<Report[]>([]);
@@ -230,9 +572,7 @@ export default function AdminReportsPage() {
               </div>
               {report.data && (
                 <div className="border-t pt-4">
-                  <pre className="text-sm overflow-x-auto" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-                    {JSON.stringify(report.data, null, 2)}
-                  </pre>
+                  {renderReportContent(report.reportType, report.data)}
                 </div>
               )}
             </div>

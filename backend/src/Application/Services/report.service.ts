@@ -19,20 +19,29 @@ export class ReportService {
     async generateReport(generateReportDto: GenerateReportDto, userId: string) {
         const { reportType, startDate, endDate } = generateReportDto;
 
+        // Normalize date range: make endDate inclusive for the entire day.
+        // This prevents empty results when start and end are the same calendar date.
+        const start = startDate ? new Date(startDate) : null;
+        const end = endDate ? new Date(endDate) : null;
+        if (end) {
+            // set end to end of day (23:59:59.999)
+            end.setUTCHours(23, 59, 59, 999);
+        }
+
         let content: any;
 
         switch (reportType) {
             case 'Sales':
-                content = await this.generateSalesReport(new Date(startDate), new Date(endDate));
+                content = await this.generateSalesReport(start, end);
                 break;
             case 'Reservation':
-                content = await this.generateReservationReport(new Date(startDate), new Date(endDate));
+                content = await this.generateReservationReport(start, end);
                 break;
             case 'Staff Performance':
-                content = await this.generateStaffPerformanceReport(new Date(startDate), new Date(endDate), generateReportDto.staffId);
+                content = await this.generateStaffPerformanceReport(start, end, generateReportDto.staffId);
                 break;
             case 'Feedback':
-                content = await this.generateFeedbackReport(new Date(startDate), new Date(endDate));
+                content = await this.generateFeedbackReport(start, end);
                 break;
         }
 
@@ -48,13 +57,16 @@ export class ReportService {
         };
     }
 
-    private async generateSalesReport(startDate: Date, endDate: Date) {
+    private async generateSalesReport(startDate: Date | null, endDate: Date | null) {
+        const match: any = {};
+        if (startDate || endDate) {
+            match.createdAt = {};
+            if (startDate) match.createdAt.$gte = startDate;
+            if (endDate) match.createdAt.$lte = endDate;
+        }
+
         const orders = await this.orderModel.aggregate([
-            {
-                $match: {
-                    createdAt: { $gte: startDate, $lte: endDate },
-                },
-            },
+            { $match: match },
             {
                 $group: {
                     _id: null,
@@ -66,11 +78,7 @@ export class ReportService {
         ]);
 
         const ordersByType = await this.orderModel.aggregate([
-            {
-                $match: {
-                    createdAt: { $gte: startDate, $lte: endDate },
-                },
-            },
+            { $match: match },
             {
                 $group: {
                     _id: '$orderType',
@@ -81,11 +89,7 @@ export class ReportService {
         ]);
 
         const ordersByPayment = await this.orderModel.aggregate([
-            {
-                $match: {
-                    createdAt: { $gte: startDate, $lte: endDate },
-                },
-            },
+            { $match: match },
             {
                 $group: {
                     _id: '$paymentType',
@@ -96,11 +100,7 @@ export class ReportService {
         ]);
 
         const dailySales = await this.orderModel.aggregate([
-            {
-                $match: {
-                    createdAt: { $gte: startDate, $lte: endDate },
-                },
-            },
+            { $match: match },
             {
                 $group: {
                     _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
@@ -120,13 +120,16 @@ export class ReportService {
         };
     }
 
-    private async generateReservationReport(startDate: Date, endDate: Date) {
+    private async generateReservationReport(startDate: Date | null, endDate: Date | null) {
+        const match: any = {};
+        if (startDate || endDate) {
+            match.reservationDate = {};
+            if (startDate) match.reservationDate.$gte = startDate;
+            if (endDate) match.reservationDate.$lte = endDate;
+        }
+
         const reservations = await this.reservationModel.aggregate([
-            {
-                $match: {
-                    reservationDate: { $gte: startDate, $lte: endDate },
-                },
-            },
+            { $match: match },
             {
                 $group: {
                     _id: null,
@@ -137,25 +140,17 @@ export class ReportService {
         ]);
 
         const reservationsByStatus = await this.reservationModel.aggregate([
-            {
-                $match: {
-                    reservationDate: { $gte: startDate, $lte: endDate },
-                },
-            },
+            { $match: match },
             {
                 $group: {
-                    _id: '$reservationStatus',
+                    _id: '$bookingStatus',
                     count: { $sum: 1 },
                 },
             },
         ]);
 
         const dailyReservations = await this.reservationModel.aggregate([
-            {
-                $match: {
-                    reservationDate: { $gte: startDate, $lte: endDate },
-                },
-            },
+            { $match: match },
             {
                 $group: {
                     _id: { $dateToString: { format: '%Y-%m-%d', date: '$reservationDate' } },
@@ -167,11 +162,7 @@ export class ReportService {
         ]);
 
         const peakHours = await this.reservationModel.aggregate([
-            {
-                $match: {
-                    reservationDate: { $gte: startDate, $lte: endDate },
-                },
-            },
+            { $match: match },
             {
                 $group: {
                     _id: { $hour: '$reservationDate' },
@@ -191,10 +182,13 @@ export class ReportService {
         };
     }
 
-    private async generateStaffPerformanceReport(startDate: Date, endDate: Date, staffId?: string) {
-        const matchStage: any = {
-            createdAt: { $gte: startDate, $lte: endDate },
-        };
+    private async generateStaffPerformanceReport(startDate: Date | null, endDate: Date | null, staffId?: string) {
+        const matchStage: any = {};
+        if (startDate || endDate) {
+            matchStage.createdAt = {};
+            if (startDate) matchStage.createdAt.$gte = startDate;
+            if (endDate) matchStage.createdAt.$lte = endDate;
+        }
 
         if (staffId) {
             matchStage.handledBy = staffId;
@@ -227,13 +221,16 @@ export class ReportService {
         };
     }
 
-    private async generateFeedbackReport(startDate: Date, endDate: Date) {
+    private async generateFeedbackReport(startDate: Date | null, endDate: Date | null) {
+        const match: any = {};
+        if (startDate || endDate) {
+            match.date = {};
+            if (startDate) match.date.$gte = startDate;
+            if (endDate) match.date.$lte = endDate;
+        }
+
         const feedbackStats = await this.feedbackModel.aggregate([
-            {
-                $match: {
-                    date: { $gte: startDate, $lte: endDate },
-                },
-            },
+            { $match: match },
             {
                 $group: {
                     _id: null,
@@ -244,11 +241,7 @@ export class ReportService {
         ]);
 
         const ratingDistribution = await this.feedbackModel.aggregate([
-            {
-                $match: {
-                    date: { $gte: startDate, $lte: endDate },
-                },
-            },
+            { $match: match },
             {
                 $group: {
                     _id: '$rating',
@@ -259,9 +252,7 @@ export class ReportService {
         ]);
 
         const recentFeedback = await this.feedbackModel
-            .find({
-                date: { $gte: startDate, $lte: endDate },
-            })
+            .find(match)
             .sort({ date: -1 })
             .limit(10)
             .populate('customer', 'name email');

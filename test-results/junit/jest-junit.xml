@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="reservation-service" tests="58" failures="0" errors="0" time="5.112">
+  <testsuite name="ReportService" errors="0" failures="0" skipped="0" timestamp="2025-12-17T20:23:10" time="2.786" tests="1">
+    <testcase classname="ReportService should return all reports" name="ReportService should return all reports" time="0.032">
+    </testcase>
+  </testsuite>
+  <testsuite name="OrderService" errors="0" failures="0" skipped="0" timestamp="2025-12-17T20:23:10" time="2.861" tests="3">
+    <testcase classname="OrderService creates a Takeaway order successfully" name="OrderService creates a Takeaway order successfully" time="0.036">
+    </testcase>
+    <testcase classname="OrderService throws if menu item not found" name="OrderService throws if menu item not found" time="0.028">
+    </testcase>
+    <testcase classname="OrderService creates a DineIn order with table param" name="OrderService creates a DineIn order with table param" time="0.006">
+    </testcase>
+  </testsuite>
+  <testsuite name="ReservationService (thorough)" errors="0" failures="0" skipped="0" timestamp="2025-12-17T20:23:10" time="2.914" tests="17">
+    <testcase classname="ReservationService (thorough) creates a reservation successfully when table exists, capacity ok, and available" name="ReservationService (thorough) creates a reservation successfully when table exists, capacity ok, and available" time="0.029">
+    </testcase>
+    <testcase classname="ReservationService (thorough) throws NotFoundException when table does not exist" name="ReservationService (thorough) throws NotFoundException when table does not exist" time="0.033">
+    </testcase>
+    <testcase classname="ReservationService (thorough) throws BadRequestException when numberOfGuests exceeds table capacity" name="ReservationService (thorough) throws BadRequestException when numberOfGuests exceeds table capacity" time="0.006">
+    </testcase>
+    <testcase classname="ReservationService (thorough) throws BadRequestException when table is not available" name="ReservationService (thorough) throws BadRequestException when table is not available" time="0.01">
+    </testcase>
+    <testcase classname="ReservationService (thorough) getAllReservations returns populated sorted list" name="ReservationService (thorough) getAllReservations returns populated sorted list" time="0.005">
+    </testcase>
+    <testcase classname="ReservationService (thorough) getReservationById returns populated reservation or null" name="ReservationService (thorough) getReservationById returns populated reservation or null" time="0.004">
+    </testcase>
+    <testcase classname="ReservationService (thorough) getReservationsByCustomer queries by customer and returns list" name="ReservationService (thorough) getReservationsByCustomer queries by customer and returns list" time="0.009">
+    </testcase>
+    <testcase classname="ReservationService (thorough) updateReservation returns null when not found" name="ReservationService (thorough) updateReservation returns null when not found" time="0.004">
+    </testcase>
+    <testcase classname="ReservationService (thorough) updateReservation throws when new table not found" name="ReservationService (thorough) updateReservation throws when new table not found" time="0.007">
+    </testcase>
+    <testcase classname="ReservationService (thorough) updateReservation throws when capacity insufficient" name="ReservationService (thorough) updateReservation throws when capacity insufficient" time="0.004">
+    </testcase>
+    <testcase classname="ReservationService (thorough) updateReservation throws when updated slot not available" name="ReservationService (thorough) updateReservation throws when updated slot not available" time="0.004">
+    </testcase>
+    <testcase classname="ReservationService (thorough) cancelReservationByCustomer returns null when not found" name="ReservationService (thorough) cancelReservationByCustomer returns null when not found" time="0.003">
+    </testcase>
+    <testcase classname="ReservationService (thorough) cancelReservationByCustomer sets bookingStatus to canceled" name="ReservationService (thorough) cancelReservationByCustomer sets bookingStatus to canceled" time="0.003">
+    </testcase>
+    <testcase classname="ReservationService (thorough) confirmReservation throws when reservation is canceled" name="ReservationService (thorough) confirmReservation throws when reservation is canceled" time="0.003">
+    </testcase>
+    <testcase classname="ReservationService (thorough) confirmReservation sets bookingStatus to confirmed" name="ReservationService (thorough) confirmReservation sets bookingStatus to confirmed" time="0.003">
+    </testcase>
+    <testcase classname="ReservationService (thorough) deleteReservation calls findByIdAndDelete" name="ReservationService (thorough) deleteReservation calls findByIdAndDelete" time="0.001">
+    </testcase>
+    <testcase classname="ReservationService (thorough) getTableReservations queries the day range" name="ReservationService (thorough) getTableReservations queries the day range" time="0.002">
+    </testcase>
+  </testsuite>
+  <testsuite name="TableService" errors="0" failures="0" skipped="0" timestamp="2025-12-17T20:23:10" time="2.925" tests="12">
+    <testcase classname="TableService createTable should create a new table" name="TableService createTable should create a new table" time="0.031">
+    </testcase>
+    <testcase classname="TableService updateTable should update a table" name="TableService updateTable should update a table" time="0.008">
+    </testcase>
+    <testcase classname="TableService updateTable should return null if table to update not found" name="TableService updateTable should return null if table to update not found" time="0.009">
+    </testcase>
+    <testcase classname="TableService getTable should return a table by ID" name="TableService getTable should return a table by ID" time="0.006">
+    </testcase>
+    <testcase classname="TableService getTable should return null if table not found" name="TableService getTable should return null if table not found" time="0.005">
+    </testcase>
+    <testcase classname="TableService getAllTables should return all tables" name="TableService getAllTables should return all tables" time="0.005">
+    </testcase>
+    <testcase classname="TableService getAllTables should return empty array if no tables exist" name="TableService getAllTables should return empty array if no tables exist" time="0.003">
+    </testcase>
+    <testcase classname="TableService deleteTable should delete a table" name="TableService deleteTable should delete a table" time="0.004">
+    </testcase>
+    <testcase classname="TableService deleteTable should return null if table to delete not found" name="TableService deleteTable should return null if table to delete not found" time="0.021">
+    </testcase>
+    <testcase classname="TableService checkTableAvailability should return true if table is available" name="TableService checkTableAvailability should return true if table is available" time="0.005">
+    </testcase>
+    <testcase classname="TableService checkTableAvailability should return false if table has overlapping reservations" name="TableService checkTableAvailability should return false if table has overlapping reservations" time="0.002">
+    </testcase>
+    <testcase classname="TableService checkTableAvailability should exclude specific reservation when checking availability" name="TableService checkTableAvailability should exclude specific reservation when checking availability" time="0.001">
+    </testcase>
+  </testsuite>
+  <testsuite name="MenuItemService" errors="0" failures="0" skipped="0" timestamp="2025-12-17T20:23:10" time="3.452" tests="9">
+    <testcase classname="MenuItemService createMenuItem should create a new menu item" name="MenuItemService createMenuItem should create a new menu item" time="0.019">
+    </testcase>
+    <testcase classname="MenuItemService getMenuItemById should return a menu item by ID" name="MenuItemService getMenuItemById should return a menu item by ID" time="0.004">
+    </testcase>
+    <testcase classname="MenuItemService getMenuItemById should return null if menu item not found" name="MenuItemService getMenuItemById should return null if menu item not found" time="0.003">
+    </testcase>
+    <testcase classname="MenuItemService updateMenuItem should update a menu item" name="MenuItemService updateMenuItem should update a menu item" time="0.003">
+    </testcase>
+    <testcase classname="MenuItemService updateMenuItem should return null if menu item to update not found" name="MenuItemService updateMenuItem should return null if menu item to update not found" time="0.004">
+    </testcase>
+    <testcase classname="MenuItemService deleteMenuItem should delete a menu item" name="MenuItemService deleteMenuItem should delete a menu item" time="0.003">
+    </testcase>
+    <testcase classname="MenuItemService deleteMenuItem should return null if menu item to delete not found" name="MenuItemService deleteMenuItem should return null if menu item to delete not found" time="0.002">
+    </testcase>
+    <testcase classname="MenuItemService getAllMenuItems should return all menu items" name="MenuItemService getAllMenuItems should return all menu items" time="0.002">
+    </testcase>
+    <testcase classname="MenuItemService getAllMenuItems should return empty array if no menu items exist" name="MenuItemService getAllMenuItems should return empty array if no menu items exist" time="0.002">
+    </testcase>
+  </testsuite>
+  <testsuite name="CustomerService" errors="0" failures="0" skipped="0" timestamp="2025-12-17T20:23:10" time="3.534" tests="8">
+    <testcase classname="CustomerService browseMenu should return all available menu items" name="CustomerService browseMenu should return all available menu items" time="0.021">
+    </testcase>
+    <testcase classname="CustomerService placeOrder should successfully place a Takeaway order" name="CustomerService placeOrder should successfully place a Takeaway order" time="0.005">
+    </testcase>
+    <testcase classname="CustomerService placeOrder should throw BadRequestException if DineIn order without reservation" name="CustomerService placeOrder should throw BadRequestException if DineIn order without reservation" time="0.017">
+    </testcase>
+    <testcase classname="CustomerService placeOrder should throw NotFoundException if menu item not found" name="CustomerService placeOrder should throw NotFoundException if menu item not found" time="0.003">
+    </testcase>
+    <testcase classname="CustomerService placeOrder should throw BadRequestException if menu item is unavailable" name="CustomerService placeOrder should throw BadRequestException if menu item is unavailable" time="0.004">
+    </testcase>
+    <testcase classname="CustomerService getOrdersByCustomer should return orders for a customer" name="CustomerService getOrdersByCustomer should return orders for a customer" time="0.005">
+    </testcase>
+    <testcase classname="CustomerService trackOrder should return order details by ID" name="CustomerService trackOrder should return order details by ID" time="0.009">
+    </testcase>
+    <testcase classname="CustomerService giveFeedback should successfully submit feedback" name="CustomerService giveFeedback should successfully submit feedback" time="0.005">
+    </testcase>
+  </testsuite>
+  <testsuite name="AuthService" errors="0" failures="0" skipped="0" timestamp="2025-12-17T20:23:10" time="3.822" tests="8">
+    <testcase classname="AuthService register should successfully register a new user" name="AuthService register should successfully register a new user" time="0.019">
+    </testcase>
+    <testcase classname="AuthService register should throw BadRequestException if user already exists" name="AuthService register should throw BadRequestException if user already exists" time="0.018">
+    </testcase>
+    <testcase classname="AuthService register should throw BadRequestException if password is too short" name="AuthService register should throw BadRequestException if password is too short" time="0.004">
+    </testcase>
+    <testcase classname="AuthService register should throw BadRequestException for invalid role" name="AuthService register should throw BadRequestException for invalid role" time="0.009">
+    </testcase>
+    <testcase classname="AuthService login should successfully login with valid credentials" name="AuthService login should successfully login with valid credentials" time="0.004">
+    </testcase>
+    <testcase classname="AuthService login should throw UnauthorizedException if user not found" name="AuthService login should throw UnauthorizedException if user not found" time="0.003">
+    </testcase>
+    <testcase classname="AuthService login should throw UnauthorizedException if password is invalid" name="AuthService login should throw UnauthorizedException if password is invalid" time="0.002">
+    </testcase>
+    <testcase classname="AuthService login should throw BadRequestException if email or password is missing" name="AuthService login should throw BadRequestException if email or password is missing" time="0.003">
+    </testcase>
+  </testsuite>
+</testsuites>
