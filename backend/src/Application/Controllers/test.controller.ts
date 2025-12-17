@@ -11,7 +11,7 @@ export class TestController {
   constructor(
     private readonly authService: AuthService,
     private readonly reportService: ReportService,
-  ) {}
+  ) { }
 
   @Post('seed')
   async seed(@Body() body: any) {

@@ -13,10 +13,14 @@ test.describe('Admin reports e2e', () => {
     const req = await request.newContext({ baseURL: apiBase });
 
     // seed backend (guarded by ENABLE_TEST_ENDPOINTS=true)
-    const seedRes = await req.post('/test/seed', { data: { admin: true } });
-    let seedBody: any = null;
-    try { seedBody = await seedRes.json(); } catch (_) { seedBody = await seedRes.text().catch(() => null); }
-    console.log('SEED:', { status: seedRes.status(), ok: seedRes.ok(), body: seedBody });
+    if (!process.env.E2E_SKIP_SEED) {
+      const seedRes = await req.post('/test/seed', { data: { admin: true } });
+      let seedBody: any = null;
+      try { seedBody = await seedRes.json(); } catch (_) { seedBody = await seedRes.text().catch(() => null); }
+      console.log('SEED:', { status: seedRes.status(), ok: seedRes.ok(), body: seedBody });
+    } else {
+      console.log('E2E_SKIP_SEED=true — skipping backend seeding');
+    }
 
     // Login via API to obtain token and user
     const loginRes = await req.post('/auth/login', { data: { email: 'admin@example.com', password: 'password' } });

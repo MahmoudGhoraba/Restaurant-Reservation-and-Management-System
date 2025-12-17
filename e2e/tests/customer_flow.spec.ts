@@ -5,9 +5,13 @@ const API = process.env.E2E_API_URL || 'http://localhost:3001';
 test.describe('Customer end-to-end flow', () => {
   test('register -> login -> reserve -> dine-in order', async ({ request }) => {
     // 1) Seed admin (enable ENABLE_TEST_ENDPOINTS=true on backend)
-    const seedRes = await request.post(`${API}/test/seed`, { data: { admin: true } });
-    const seedJson = await seedRes.json().catch(() => ({}));
-    expect(seedRes.ok() || seedJson.status === 'ok').toBeTruthy();
+    if (!process.env.E2E_SKIP_SEED) {
+      const seedRes = await request.post(`${API}/test/seed`, { data: { admin: true } });
+      const seedJson = await seedRes.json().catch(() => ({}));
+      expect(seedRes.ok() || seedJson.status === 'ok').toBeTruthy();
+    } else {
+      console.log('E2E_SKIP_SEED=true — skipping backend seeding');
+    }
 
     // 2) Register a new customer
     const customerEmail = `e2e.customer+${Date.now()}@example.com`;
