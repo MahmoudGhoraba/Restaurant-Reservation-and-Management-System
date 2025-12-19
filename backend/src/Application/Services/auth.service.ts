@@ -11,7 +11,7 @@ import {
   UpdateProfileDto,
   ChangePasswordDto,
 } from 'src/auth/dto';
-import { MailService } from 'src/infrastructure/mail/mail.service';
+import { MailService } from '../../infrastructure/mail/mail.service';
 
 @Injectable()
 export class AuthService {

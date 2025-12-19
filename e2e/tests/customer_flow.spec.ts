@@ -1,108 +1,146 @@
 import { test, expect } from '@playwright/test';
 
 const API = process.env.E2E_API_URL || 'http://localhost:3001';
+const FRONTEND = process.env.E2E_FRONTEND_URL || 'http://localhost:3001';
 
 test.describe('Customer end-to-end flow', () => {
-  test('register -> login -> reserve -> dine-in order', async ({ request }) => {
+  test('register -> login -> reserve -> dine-in order', async ({ request, page }) => {
     // 1) Seed admin (enable ENABLE_TEST_ENDPOINTS=true on backend)
-    if (!process.env.E2E_SKIP_SEED) {
-      const seedRes = await request.post(`${API}/test/seed`, { data: { admin: true } });
-      const seedJson = await seedRes.json().catch(() => ({}));
-      expect(seedRes.ok() || seedJson.status === 'ok').toBeTruthy();
-    } else {
-      console.log('E2E_SKIP_SEED=true — skipping backend seeding');
-    }
+    // if (!process.env.E2E_SKIP_SEED) {
+    //   const seedRes = await request.post(`${API}/test/seed`, { data: { admin: true } });
+    //   const seedJson = await seedRes.json().catch(() => ({}));
+    //   expect(seedRes.ok() || seedJson.status === 'ok').toBeTruthy();
+    // } else {
+    //   console.log('E2E_SKIP_SEED=true — skipping backend seeding');
+    // }
 
-    // 2) Register a new customer
+    // 2) Register a new customer via the frontend UI
     const customerEmail = `e2e.customer+${Date.now()}@example.com`;
-    const registerRes = await request.post(`${API}/auth/register`, {
-      data: { name: 'E2E Customer', email: customerEmail, password: 'password' },
-    });
-    expect(registerRes.ok()).toBeTruthy();
-    const registerJson = await registerRes.json();
+    await page.goto(`${FRONTEND}/register`);
+    await page.getByRole('textbox').nth(0).fill('E2E Customer');
+    await page.getByRole('textbox').nth(1).fill(customerEmail);
+    await page.getByRole('textbox').nth(2).fill('password');
+    await page.getByRole('textbox').nth(3).fill('password');
+
+    const [registerResponse] = await Promise.all([
+      page.waitForResponse((resp) => resp.url().includes('/auth/register') && resp.status() < 500),
+      page.getByRole('button', { name: 'Register' }).click(),
+    ]);
+    expect(registerResponse.ok()).toBeTruthy();
+    const registerJson = await registerResponse.json();
     expect(registerJson).toHaveProperty('user');
+    const customerUser = registerJson.user;
 
-    // 3) Login as the customer
-    const loginRes = await request.post(`${API}/auth/login`, {
-      data: { email: customerEmail, password: 'password' },
-    });
-    expect(loginRes.ok()).toBeTruthy();
-    const { user: customerUser, token: customerToken } = await loginRes.json();
-    expect(customerUser).toBeTruthy();
-    expect(customerToken).toBeTruthy();
+    // 3) Login as the customer via frontend UI
+    await page.goto(`${FRONTEND}/login`);
+    await page.waitForLoadState('networkidle');
+    await page.getByRole('textbox').nth(0).fill(customerEmail);
+    await page.getByRole('textbox').nth(1).fill('password');
+    await page.waitForLoadState('networkidle');
+    await page.getByRole('button', { name: 'Sign in' }).click();
+    await expect(
+      page.getByRole('heading', { name: 'Welcome to Mama Mama' })
+    ).toBeVisible();
 
-    // 4) Login as admin (seed may not create admin correctly). If login fails,
-    // try to register the admin with the correct role and login again.
-    let adminLogin = await request.post(`${API}/auth/login`, {
-      data: { email: 'admin@example.com', password: 'password' },
-    });
-    if (!adminLogin.ok()) {
-      await request.post(`${API}/auth/register`, {
-        data: { name: 'E2E Admin', email: 'admin@example.com', password: 'password', role: 'Admin' },
-      }).catch(() => null);
-      adminLogin = await request.post(`${API}/auth/login`, {
-        data: { email: 'admin@example.com', password: 'password' },
-      });
-    }
-    expect(adminLogin.ok()).toBeTruthy();
-    const adminJson = await adminLogin.json();
-    const adminToken = adminJson?.token;
-    expect(adminToken).toBeTruthy();
+    await page.getByText("Logout").click();
+    // 4) Login as admin via frontend UI
+    await page.goto(`${FRONTEND}/login`);
+    await page.waitForLoadState('networkidle');
+
+    await page.getByRole('textbox').nth(0).fill('admin@example.com');
+    await page.getByRole('textbox').nth(1).fill('password');
+    await page.waitForLoadState('networkidle');
+    await page.getByRole('button', { name: 'Sign in' }).click();
+    expect(page.getByRole('heading', { name: 'Admin Dashboard' })).toBeVisible();
+
 
     // 5) Create a table as admin
-    const tableRes = await request.post(`${API}/tables`, {
-      data: { capacity: 4, location: 'Patio' },
-      headers: { Authorization: `Bearer ${adminToken}` },
-    });
-    expect(tableRes.ok()).toBeTruthy();
-    const tableJson = await tableRes.json();
-    const tableId = tableJson?.data?._id || tableJson?.data?.id || tableJson?.data;
-    expect(tableId).toBeTruthy();
+    await page.getByRole('link', { name: 'Tables' }).nth(0).click();
+    await page.getByRole('button', { name: 'Add Table' }).click();
+    await page.getByRole('spinbutton').click();
+    await page.getByRole('spinbutton').fill('4');
+    await page.getByRole('textbox').click();
+    await page.getByRole('textbox').fill('patio');
+    const [createTableResponse] = await Promise.all([
+      page.waitForResponse(
+        (resp) =>
+          resp.url().includes('/tables') &&
+          resp.request().method() === 'POST'
+      ),
+      page.getByRole('button', { name: 'Create' }).click(),
+    ]);
+
+    expect(createTableResponse.status()).toBe(201);
+    const tableJson = await createTableResponse.json();
+    const tableId = tableJson._id || tableJson.id || tableJson.data?._id || tableJson.data?.id;
 
     // 6) Create a menu item as admin
-    const menuRes = await request.post(`${API}/menuitems`, {
-      data: {
-        name: 'E2E Burger',
-        description: 'Test burger',
-        price: 9.99,
-        availability: true,
-        category: 'Mains',
-      },
-      headers: { Authorization: `Bearer ${adminToken}` },
-    });
-    expect(menuRes.ok()).toBeTruthy();
-    const menuJson = await menuRes.json();
-    const menuItemId = menuJson?.data?._id || menuJson?.data?.id || menuJson?.data;
-    expect(menuItemId).toBeTruthy();
+    await page.getByRole('navigation').getByRole('link', { name: 'Menu' }).click();
+    await page.getByRole('button', { name: 'Add Menu Item' }).click();
+    await page.getByRole('textbox').first().click();
+    await page.getByRole('textbox').first().fill('salmon');
+    await page.getByRole('textbox').nth(1).click();
+    await page.getByRole('textbox').nth(1).fill('Mains');
+    await page.getByRole('spinbutton').click();
+    await page.getByRole('spinbutton').fill('12');
+    await page.locator('input[type="url"]').click();
+    await page.locator('textarea').click();
+    await page.locator('textarea').click();
+    await page.locator('textarea').fill('test');
+    const [createMenuItemResponse] = await Promise.all([
+      page.waitForResponse(
+        (resp) =>
+          resp.url().includes('/menuitems') &&
+          resp.request().method() === 'POST'
+      ),
+      page.getByRole('button', { name: 'Create' }).click(),
+    ]);
 
-    // 7) Create a reservation as the customer (requires JWT auth)
-    const reservationDate = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(); // tomorrow
-    const reserveRes = await request.post(`${API}/reservations`, {
-      data: {
-        table: tableId,
-        reservationDate: reservationDate,
-        reservationTime: '19:00',
-        numberOfGuests: 2,
-      },
-      headers: { Authorization: `Bearer ${customerToken}` },
-    });
-    expect(reserveRes.ok()).toBeTruthy();
-    const reserveJson = await reserveRes.json();
-    const reservationId = reserveJson?.data?._id || reserveJson?.data?.id || reserveJson?.data;
-    expect(reservationId).toBeTruthy();
+    expect(createMenuItemResponse.status()).toBe(201);
+    const menuItemJson = await createMenuItemResponse.json();
+    const menuItemId = menuItemJson._id || menuItemJson.id || menuItemJson.data?._id || menuItemJson.data?.id;
 
-    // 8) Place a DineIn order referencing the reservation
-    const orderRes = await request.post(`${API}/orders`, {
-      data: {
-        id: customerUser._id || customerUser.id || customerUser._id || customerUser,
-        items: [{ menuItem: menuItemId, quantity: 1 }],
-        orderType: 'DineIn',
-        paymentType: 'Cash',
-        reservationId,
-      },
-    });
-    expect(orderRes.ok()).toBeTruthy();
-    const orderJson = await orderRes.json();
-    expect(orderJson.status === 'success' || orderJson?.data).toBeTruthy();
+    await page.getByRole('button', { name: 'Logout' }).click();
+    await page.waitForLoadState('networkidle');
+    await page.getByRole('textbox').nth(0).fill(customerEmail);
+    await page.getByRole('textbox').nth(1).fill('password');
+    await page.getByRole('button', { name: 'Sign in' }).click();
+
+    await expect(
+      page.getByRole('heading', { name: 'Welcome to Mama Mama' })
+    ).toBeVisible();
+
+
+    await page.getByRole('navigation').getByRole('link', { name: 'Reservations' }).click();
+    await page.getByRole('button', { name: 'New Reservation' }).click();
+    await page.getByRole('combobox').selectOption('692c47f3bacc390f0f2b7c59');
+    await page.locator('input[type="date"]').fill('2025-12-24');
+    await page.locator('input[type="time"]').click();
+    await page.locator('input[type="time"]').fill('11:11');
+    await page.getByRole('spinbutton').first().click();
+    await page.getByRole('spinbutton').first().fill('3');
+    await page.getByRole('spinbutton').nth(1).click();
+    await page.locator('textarea').click();
+    await page.locator('textarea').fill('none');
+    await page.getByRole('button', { name: 'Create Reservation' }).click();
+    const [createReservationResponse] = await Promise.all([
+      page.waitForResponse(
+        (resp) =>
+          resp.url().includes('/reservations') &&
+          resp.request().method() === 'POST'
+      ),
+      page.getByRole('button', { name: 'Create Reservation' }).click(),
+    ]);
+
+    expect(createReservationResponse.status()).toBe(201);
+    await page.getByRole('navigation').getByRole('link', { name: 'Menu' }).click();
+    await page.getByRole('link', { name: 'My Orders' }).click();
+    await page.getByRole('button', { name: 'Place New Order' }).click();
+    await page.getByRole('navigation').getByRole('link', { name: 'Menu' }).click();
+    await page.getByRole('button', { name: 'Add to Cart' }).first().click();
+    await page.getByRole('button', { name: 'Cart (1) $' }).click();
+    await page.getByRole('button', { name: 'Place Order' }).click();
+    await expect(page.getByRole('heading', { name: 'My Orders' })).toBeVisible();
+
   });
 });
