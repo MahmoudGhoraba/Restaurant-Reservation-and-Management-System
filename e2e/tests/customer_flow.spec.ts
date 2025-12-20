@@ -122,7 +122,6 @@ test.describe('Customer end-to-end flow', () => {
     await page.getByRole('spinbutton').nth(1).click();
     await page.locator('textarea').click();
     await page.locator('textarea').fill('none');
-    await page.getByRole('button', { name: 'Create Reservation' }).click();
     const [createReservationResponse] = await Promise.all([
       page.waitForResponse(
         (resp) =>
