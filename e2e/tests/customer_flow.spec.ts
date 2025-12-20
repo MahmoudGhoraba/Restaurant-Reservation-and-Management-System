@@ -51,6 +51,8 @@ test.describe('Customer end-to-end flow', () => {
     await page.getByRole('textbox').nth(1).fill('password');
     await page.waitForLoadState('networkidle');
     await page.getByRole('button', { name: 'Sign in' }).click();
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(1000);
     expect(page.getByRole('heading', { name: 'Admin Dashboard' })).toBeVisible();
 
 
