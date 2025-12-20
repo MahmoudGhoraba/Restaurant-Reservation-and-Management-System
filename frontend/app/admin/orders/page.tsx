@@ -57,7 +57,7 @@ export default function AdminOrdersPage() {
     fetchData();
   }, [router]);
 
-  const handleUpdateStatus = async (orderId: string, newStatus: string) => {
+  const handleUpdateStatus = async (orderId: string, newStatus: Order['status']) => {
     try {
       const response = await apiClient.put<{ status: string; data: Order }>(
         `/orders/${orderId}/status`,
@@ -198,7 +198,7 @@ export default function AdminOrdersPage() {
                 <div>
                   <h4 className="font-semibold mb-2">Update Status:</h4>
                   <div className="flex gap-2" style={{ flexWrap: 'wrap' }}>
-                    {['Pending', 'Preparing', 'Served', 'Completed'].map((status) => (
+                    {(['Pending', 'Preparing', 'Served', 'Completed'] as Order['status'][]).map((status) => (
                       <Button
                         key={status}
                         variant={order.status === status ? 'primary' : 'outline'}
