@@ -1,0 +1,13 @@
+{
+  "name": "restaurant-e2e",
+  "private": true,
+  "devDependencies": {
+    "@playwright/test": "^1.57.0"
+  },
+  "scripts": {
+    "e2e:install": "npx playwright install --with-deps",
+    "e2e": "npx playwright test",
+    "e2e:headed": "npx playwright test --headed",
+    "e2e:run": "E2E_API_URL=http://localhost:3000 E2E_FRONTEND_URL=http://localhost:3000 npx playwright test"
+  }
+}
